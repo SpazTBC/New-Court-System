@@ -8,6 +8,15 @@ if(!isset($_SESSION['username'])) {
 }
 
 include("../include/database.php");
+
+// Get user information including job and character name
+$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->execute([$_SESSION['username']]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Set a flag for attorney status
+$isAttorney = ($user['job'] === "Attorney");
+$characterName = $user['charactername'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,7 +31,8 @@ include("../include/database.php");
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <div class="navbar-brand d-flex align-items-center">
-                <img src="../images/logo.png" alt="Logo" class="img-fluid me-2" style="max-height: 40px;">
+                <!-- <img src="../images/logo.png" alt="Logo" class="img-fluid me-2" style="max-height: 40px;"> -->
+                <span class="fw-bold text-white">Blackwood & Associates</span>
                 <span class="ms-2">Welcome <?php echo htmlspecialchars($_SESSION['username']); ?></span>
             </div>
             <?php include("../include/menu.php"); ?>
@@ -34,9 +44,11 @@ include("../include/database.php");
         <div class="card shadow-lg mb-4">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                 <h3 class="mb-0">My Cases</h3>
+                <?php if($isAttorney): ?>
                 <a href="addcase/" class="btn btn-primary">
                     <i class='bx bx-plus'></i> New Case
                 </a>
+                <?php endif; ?>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -53,10 +65,31 @@ include("../include/database.php");
                         </thead>
                         <tbody>
                             <?php
+                            // Get cases where user is assigned
                             $stmt = $conn->prepare("SELECT * FROM cases WHERE assigneduser = :username");
                             $stmt->execute(['username' => $_SESSION['username']]);
-                                                        
-                            while($case = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
+                            $assignedCases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            // Get cases where user is the defendent (case insensitive match)
+                            $stmt = $conn->prepare("SELECT * FROM cases WHERE LOWER(defendent) = LOWER(:characterName)");
+                            $stmt->execute(['characterName' => $characterName]);
+                            $defendentCases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            // Merge and remove duplicates
+                            $allCases = array_merge($assignedCases, $defendentCases);
+                            $uniqueCases = [];
+                            $caseIds = [];
+                            
+                            foreach ($allCases as $case) {
+                                if (!in_array($case['id'], $caseIds)) {
+                                    $caseIds[] = $case['id'];
+                                    $uniqueCases[] = $case;
+                                }
+                            }
+                            
+                            if (count($uniqueCases) > 0):
+                                foreach($uniqueCases as $case): 
+                            ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($case['id']); ?></td>
                                     <td><?php echo htmlspecialchars($case['caseid']); ?></td>
@@ -77,7 +110,18 @@ include("../include/database.php");
                                         </a>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php 
+                                endforeach;
+                            else:
+                            ?>
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="alert alert-info">
+                                            No cases found.
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -108,7 +152,9 @@ include("../include/database.php");
                             $stmt = $conn->prepare("SELECT * FROM cases WHERE supervisor = :username");
                             $stmt->execute(['username' => $_SESSION['username']]);
                             
-                            while($case = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
+                            if ($stmt->rowCount() > 0):
+                                while($case = $stmt->fetch(PDO::FETCH_ASSOC)): 
+                            ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($case['id']); ?></td>
                                     <td><?php echo htmlspecialchars($case['caseid']); ?></td>
@@ -121,20 +167,21 @@ include("../include/database.php");
                                         </a>
                                     </td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php 
+                                endwhile;
+                            else:
+                            ?>
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="alert alert-info">
+                                            No supervised cases found.
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-                <!-- Debug section - add this after the table -->
-                <?php if ($stmt->rowCount() === 0): ?>
-                    <tr>
-                        <td colspan="6" class="text-center">
-                            <div class="alert alert-info">
-                                No cases found for user: <?php echo htmlspecialchars($_SESSION['username']); ?>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endif; ?>
             </div>
         </div>
         <?php endif; ?>

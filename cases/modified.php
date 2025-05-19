@@ -28,8 +28,9 @@ $date = date("m-d-Y h:i:s A");
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <div class="navbar-brand d-flex align-items-center">
-                <img src="../images/logo.png" alt="Logo" class="img-fluid me-2" style="max-height: 40px;">
-                <span>Welcome <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                <!-- <img src="../images/logo.png" alt="Logo" class="img-fluid me-2" style="max-height: 40px;"> -->
+                <span class="fw-bold text-white">Blackwood & Associates</span>
+                <span class="ms-2">Welcome <?php echo htmlspecialchars($_SESSION['username']); ?></span>
             </div>
             <?php include("../include/menu.php"); ?>
         </div>

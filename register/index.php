@@ -13,7 +13,8 @@ include("../include/database.php");
 <body>
     <div id="menu">
         <div class='logo'>
-            <img src="../images/logo.png" class="img-fluid"/>
+            <!-- <img src="../images/logo.png" class="img-fluid"/> -->
+            <span class="fw-bold text-white">Blackwood & Associates</span>
         </div>
         <?php include("../include/menu.php"); ?>
     </div>

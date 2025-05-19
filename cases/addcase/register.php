@@ -5,7 +5,8 @@
         </head>
         <div id="menu">
             <div class='logo'>
-                <img src="../../images/logo.png"/>
+                <!-- <img src="../../images/logo.png"/> -->
+                <span class="fw-bold text-white">Blackwood & Associates</span>
              </div> <!-- logo end -->
              <!-- LINK SEPERATION -->
          <!--    <?php //include("../../include/menu.php"); ?>-->

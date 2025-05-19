@@ -19,7 +19,8 @@ if(isset($_SESSION['username'])) {
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <div class="navbar-brand">
-                <img src="../images/logo.png" alt="Logo" class="img-fluid" style="max-height: 40px;">
+                <!-- <img src="../images/logo.png" alt="Logo" class="img-fluid" style="max-height: 40px;"> -->
+                <span class="fw-bold text-white">Blackwood & Associates</span>
             </div>
             <?php include("../include/menu.php"); ?>
         </div>

@@ -23,7 +23,8 @@ if(isset($_SESSION['success']))
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <div class="navbar-brand">
-                <img src="images/logo.png" alt="Logo" class="img-fluid" style="max-height: 50px;">
+                <!-- <img src="images/logo.png" alt="Logo" class="img-fluid" style="max-height: 50px;"> -->
+                <span class="fw-bold text-white">Blackwood & Associates</span>
             </div>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>

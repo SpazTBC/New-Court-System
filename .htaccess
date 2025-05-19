@@ -1,0 +1,5 @@
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ - [R=404,L]
+ErrorDocument 404 "<H1>Error 404</H1>You either were searching a case file that had no files in it, or you tried going to a page that wasn't there! please go back to <a href='http://localhost/login/home.php'>Home</a>"

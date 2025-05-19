@@ -1,0 +1,132 @@
+body {
+    background-color: rgb(252, 252, 252); 
+}
+#menu { /* menu */
+    background-color: rgb(226, 226, 226);
+    font-family: "Times New Roman", Times, serif;
+    color:rgb(64, 64, 64);
+}
+/* LINK DECORATION */
+#menu a input {
+    /* LINKS */
+    color: rgb(64, 64, 64);
+    font-size: 15px;
+    font-weight: bold;
+}
+#menu a input:visited {
+    color: rgb(64, 64, 64);
+    background-color: rgb(182, 179, 179);
+}
+#menu > a input:hover {
+    color: rgb(64,64,64);
+    background-color: rgb(182, 179, 179);
+}
+/* LINK DECORATION(ABOVE) */
+.menu { /* POSITIONING ONLY */
+}
+#welcome {
+    font-weight: bold;
+    font-family: 'Brush Script MT', Brush Script Std, cursive;
+    font-size: 15px;
+    position: absolute;
+    right: 9;
+    top: 10;
+    }
+.logo > img {
+    height: 50px;
+    width: 50px;
+}
+#message {
+    text-align: center;
+    font-size: 25px;
+    font-weight: bold;
+}
+.message {
+    color: Red;
+}
+.input-group label {
+    font-weight: bold;
+    font-size: 17px;
+}
+
+.input-group input {
+    border-radius: 25px;
+    border: 1px solid;
+    padding: 20px; 
+    width: 200px;
+    height: 15px;   
+    width: 500px;
+    height: 60px;
+    color:rgb(64, 64, 64);
+    background-color: rgb(226, 226, 226);
+}
+#header{
+color:rgb(0, 0, 0);
+font-size: 30px;
+}
+.logout {
+    position: absolute;
+    right: 0;
+}
+.generate{
+    background-color: rgb(206, 206, 206);
+    border: none;
+    color: rgb(65, 65, 65);
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    border-radius: 12px;
+}
+.makeacase {
+/*    border: 1px solid black;*/
+}
+.banned {
+    font-weight: bold;
+    color: red;
+    font-size: 200px;
+    text-align: center;
+}
+.bannedmessage {
+    font-weight: bold;
+    color: red;
+    font-size: 50px;
+    text-align: center;
+}
+#footer{
+    position:fixed;
+    left:0px;
+    bottom:0px;
+    height:30px;
+    width:100%;
+    background:#999;
+    color: rgb(0, 0, 0);
+    text-align: center;
+    font-weight: bold;
+}
+/* DEMO */
+.blink {
+    display: table; /* keep the background color wrapped tight */
+    margin: 0px auto 0px auto; /* keep the table centered */
+    padding:5px;
+  animation: blink 1.3s steps(1, end) infinite;
+  font-size: 25px;
+  color: white;
+  background-color: red;
+  text-align: center;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* DEMO */

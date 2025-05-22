@@ -43,12 +43,35 @@ $characterName = $user['charactername'];
         <!-- Main Cases Section -->
         <div class="card shadow-lg mb-4">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h3 class="mb-0">My Cases</h3>
-                <?php if($isAttorney): ?>
-                <a href="addcase/" class="btn btn-primary">
-                    <i class='bx bx-plus'></i> New Case
-                </a>
-                <?php endif; ?>
+                <h2>Case Management</h2>
+                <div class="d-flex gap-2">
+                    <?php
+                    // Get the user's job from the database
+                    $stmt = $conn->prepare("SELECT job FROM users WHERE username = :username");
+                    $stmt->execute(['username' => $_SESSION['username']]);
+                    $user = $stmt->fetch();
+                    $userJob = strtolower($user['job']);
+                    
+                    // Show approval page link for Attorney General
+                    if ($userJob == 'ag' && $jobApproved == 1) {
+                        echo '<a href="approve/" class="btn btn-warning me-2">
+                            <i class="bx bx-check-shield"></i> Pending Approvals
+                        </a>';
+                    }
+                    
+                    // Different button text based on job
+                    if ($userJob === 'police') {
+                        $buttonText = "Submit A Case";
+                        $buttonLink = "submitcase/";
+                    } else {
+                        $buttonText = "New Case";
+                        $buttonLink = "addcase/";
+                    }
+                    ?>
+                    <a href="<?php echo $buttonLink; ?>" class="btn btn-primary">
+                        <i class="bx bx-plus"></i> <?php echo $buttonText; ?>
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -60,67 +83,76 @@ $characterName = $user['charactername'];
                                 <th>Supervisor</th>
                                 <th>Date Assigned</th>
                                 <th>Type</th>
+                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            // Get cases where user is assigned
-                            $stmt = $conn->prepare("SELECT * FROM cases WHERE assigneduser = :username");
+                            // Get the user's job
+                            $stmt = $conn->prepare("SELECT job, job_approved FROM users WHERE username = :username");
                             $stmt->execute(['username' => $_SESSION['username']]);
-                            $assignedCases = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                            
-                            // Get cases where user is the defendent (case insensitive match)
-                            $stmt = $conn->prepare("SELECT * FROM cases WHERE LOWER(defendent) = LOWER(:characterName)");
-                            $stmt->execute(['characterName' => $characterName]);
-                            $defendentCases = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                            
-                            // Merge and remove duplicates
-                            $allCases = array_merge($assignedCases, $defendentCases);
-                            $uniqueCases = [];
-                            $caseIds = [];
-                            
-                            foreach ($allCases as $case) {
-                                if (!in_array($case['id'], $caseIds)) {
-                                    $caseIds[] = $case['id'];
-                                    $uniqueCases[] = $case;
-                                }
+                            $user = $stmt->fetch();
+                            $userJob = strtolower($user['job']);
+                            $jobApproved = $user['job_approved'] ?? 1; // Default to 1 for backward compatibility
+                            $isAG = ($userJob === 'ag');
+
+                            // Query to get only cases where this user is the assigned user (creator)
+                            $query = "SELECT * FROM cases WHERE assigneduser = :username";
+
+                            // For non-AG users, filter out pending cases
+                            if (!$isAG) {
+                                $query .= " AND (status != 'pending' OR status IS NULL)";
                             }
+
+                            // Add order by
+                            $query .= " ORDER BY id DESC";
+
+                            $stmt = $conn->prepare($query);
+                            $stmt->bindParam(':username', $_SESSION['username']);
+                            $stmt->execute();
+                            $cases = $stmt->fetchAll();
                             
-                            if (count($uniqueCases) > 0):
-                                foreach($uniqueCases as $case): 
+                            if(!empty($cases)):
+                                foreach($cases as $case):
                             ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($case['id']); ?></td>
-                                    <td><?php echo htmlspecialchars($case['caseid']); ?></td>
-                                    <td>
-                                        <?php if($case['supervisor']): ?>
-                                            <span class="badge bg-success">
-                                                <i class='bx bx-check'></i> <?php echo htmlspecialchars($case['supervisor']); ?>
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary">No Supervisor</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($case['assigned']); ?></td>
-                                    <td><?php echo htmlspecialchars($case['type']); ?></td>
-                                    <td>
-                                        <a href="view.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-info">
-                                            <i class='bx bx-show'></i> View
-                                        </a>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td><?php echo htmlspecialchars($case['caseid']); ?></td>
+                                <td><?php echo htmlspecialchars($case['type']); ?></td>
+                                <td>
+                                    <?php if($case['supervisor']): ?>
+                                        <span class="badge bg-success">
+                                            <i class='bx bx-check'></i> <?php echo htmlspecialchars($case['supervisor']); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary">No Supervisor</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($case['assigned']); ?></td>
+                                <td><?php echo htmlspecialchars($case['type']); ?></td>
+                                <td>
+                                    <?php if(isset($case['status']) && $case['status'] == 'pending'): ?>
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    <?php elseif(isset($case['status']) && $case['status'] == 'denied'): ?>
+                                        <span class="badge bg-danger">Denied</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-success">Approved</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <a href="view.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-info">View</a>
+                                    <a href="modify.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                                    <a href="delete.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Are you sure?')">Delete</a>
+                                </td>
+                            </tr>
                             <?php 
                                 endforeach;
                             else:
                             ?>
-                                <tr>
-                                    <td colspan="6" class="text-center">
-                                        <div class="alert alert-info">
-                                            No cases found.
-                                        </div>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="7" class="text-center">No approved cases found</td>
+                            </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -233,6 +265,21 @@ $characterName = $user['charactername'];
         <?php 
             endif;
         endforeach; 
+        ?>
+        <!-- If user is AG, get count of pending cases -->
+        <?php
+            if ($userJob === 'ag' && $jobApproved == 1) {
+                $pendingStmt = $conn->prepare("SELECT COUNT(*) as pending_count FROM cases WHERE status = 'pending'");
+                $pendingStmt->execute();
+                $pendingCount = $pendingStmt->fetch()['pending_count'];
+                
+                if ($pendingCount > 0) {
+                    echo '<div class="alert alert-warning">
+                        <i class="bx bx-bell"></i> You have ' . $pendingCount . ' pending case' . ($pendingCount > 1 ? 's' : '') . ' to review.
+                        <a href="approve/" class="btn btn-sm btn-warning ms-2">Review Now</a>
+                    </div>';
+                }
+            }
         ?>
     </div>
 

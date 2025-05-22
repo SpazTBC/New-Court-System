@@ -93,6 +93,8 @@ include("../include/database.php");
                                     if (file_exists($dir)):
                                         $files = glob($dir . "*");
                                         if (!empty($files)):
+                                            // Only show files if user is not a civilian and not the defendant
+                                            if($case['job'] !== "Civilian" && $_SESSION['username'] !== $case['defendent']):
                                     ?>
                                         <div class="list-group">
                                             <?php foreach($files as $file): ?>
@@ -106,6 +108,13 @@ include("../include/database.php");
                                             <?php endforeach; ?>
                                         </div>
                                     <?php else: ?>
+                                        <div class="alert alert-warning">
+                                            <i class='bx bx-lock-alt'></i> You don't have permission to view case files
+                                        </div>
+                                    <?php 
+                                            endif;
+                                        else: 
+                                    ?>
                                         <div class="alert alert-info">No files uploaded yet</div>
                                     <?php 
                                         endif;

@@ -51,7 +51,7 @@
                 <?php
                 // Authenticated User Menu
                 if(isset($_SESSION['username'])) {
-                    // Common menu items for all authenticated users
+                    // Common menu items for all all users
                     ?>
                     <li class="nav-item">
                         <a class="nav-link <?php echo (isset($menu) && $menu == "HOME") ? 'active' : ''; ?>" href="/login/home.php">
@@ -66,7 +66,8 @@
                     
                     <?php 
                     // Attorney-specific menu items
-                    if(isset($isAttorney) && $isAttorney === true): 
+                    // Only show attorney menu items if the user is an attorney AND their job is approved
+                    if(isset($isAttorney) && $isAttorney === true && isset($user['job_approved']) && $user['job_approved'] == 1): 
                     ?>
                     <li class="nav-item">
                         <a class="nav-link <?php echo (isset($menu) && $menu == "CLIENTS") ? 'active' : ''; ?>" href="/client-intake/view_intakes.php">
@@ -87,7 +88,35 @@
                     <?php 
                     endif;
                     
-                    // Additional common menu items
+                    // Check if user is AG
+                    $menuStmt = $conn->prepare("SELECT job FROM users WHERE username = :username");
+                    $menuStmt->execute(['username' => $_SESSION['username']]);
+                    $menuUser = $menuStmt->fetch();
+                    $menuUserJob = strtolower($menuUser['job']);
+                    
+                    // Add approval notification for AG only if job is approved
+                    if ($menuUserJob === 'ag') {
+                        // Check if job is approved
+                        $jobApprovedStmt = $conn->prepare("SELECT job_approved FROM users WHERE username = :username");
+                        $jobApprovedStmt->execute(['username' => $_SESSION['username']]);
+                        $jobApproved = $jobApprovedStmt->fetch()['job_approved'] ?? 1; // Default to 1 for backward compatibility
+                        
+                        if ($jobApproved == 1) {
+                            $pendingStmt = $conn->prepare("SELECT COUNT(*) as pending_count FROM cases WHERE status = 'pending'");
+                            $pendingStmt->execute();
+                            $pendingCount = $pendingStmt->fetch()['pending_count'];
+                            
+                            if ($pendingCount > 0) {
+                                // Always use absolute path for approvals to avoid directory issues
+                                echo '<li class="nav-item">
+                                    <a class="nav-link" href="/cases/approve/">
+                                        <i class="bx bx-bell"></i> Approvals
+                                        <span class="badge bg-danger">' . $pendingCount . '</span>
+                                    </a>
+                                </li>';
+                            }
+                        }
+                    }                    // Additional common menu items
                     ?>
                     <li class="nav-item">
                         <a class="nav-link" href="/login/logout.php">
@@ -196,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Add click event to dropdown toggles
-    var dropdowns = document.querySelectorAll('.dropdown-toggle');
+    var dropdowns = document document('.dropdown-toggle');
     dropdowns.forEach(function(dropdown) {
         dropdown.addEventListener('click', function(event) {
             event.preventDefault();

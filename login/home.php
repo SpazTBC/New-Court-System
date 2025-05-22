@@ -14,8 +14,8 @@ $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Set a flag for attorney status
-$isAttorney = ($user['job'] === "Attorney");
+// Set a flag for attorney status - only true if job is Attorney AND job is approved
+$isAttorney = ($user['job'] === "Attorney" && $user['job_approved'] == 1);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -109,7 +109,13 @@ $isAttorney = ($user['job'] === "Attorney");
                                     </tr>
                                     <tr>
                                         <th>Job</th>
-                                        <td><?php echo $user['job'] === "Civilian" ? "Unemployed" : htmlspecialchars($user['job']); ?></td>
+                                        <td>
+                                            <?php if(isset($user['job_approved']) && $user['job_approved'] == 0 && $user['job'] !== "Civilian"): ?>
+                                                Civilian <span class="badge bg-warning">Your Job (<?php echo htmlspecialchars($user['job']); ?>) is Pending Approval</span>
+                                            <?php else: ?>
+                                                <?php echo $user['job'] === "Civilian" ? "Unemployed" : htmlspecialchars($user['job']); ?>
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th>Status</th>

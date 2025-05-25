@@ -1,0 +1,34 @@
+# Protect client directories
+<Files "*.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Allow access to document files for authenticated users only
+<FilesMatch "\.(pdf|doc|docx|jpg|jpeg|png|gif|txt|rtf)$">
+    Order Deny,Allow
+    Deny from all
+    # You can add specific IP restrictions here if needed
+</FilesMatch>
+
+# Prevent directory browsing
+Options -Indexes
+
+# Prevent access to README files
+<Files "README.txt">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Prevent access to sensitive files
+<FilesMatch "\.(log|bak|backup|old)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# PHP settings for large file uploads
+php_value upload_max_filesize 20M
+php_value post_max_size 22M
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value memory_limit 256M

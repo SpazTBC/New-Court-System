@@ -11,6 +11,15 @@ include("../include/database.php");
     <title>View Case Details</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .upload-progress {
+            display: none;
+        }
+        .file-size-info {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -26,6 +35,70 @@ include("../include/database.php");
 
     <div class="container py-4">
         <?php
+        // Display upload messages
+        if (isset($_GET['success']) && $_GET['success'] == 'upload') {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bx bx-check-circle"></i> File uploaded successfully!';
+            if (isset($_GET['file'])) {
+                echo ' File: ' . htmlspecialchars(urldecode($_GET['file']));
+            }
+            echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>';
+        }
+
+        // Display error messages
+        if (isset($_GET['error'])) {
+            $error = $_GET['error'];
+            $error_message = '';
+            
+            switch($error) {
+                case 'size':
+                    $size = isset($_GET['size']) ? $_GET['size'] : 'unknown';
+                    $max = isset($_GET['max']) ? $_GET['max'] : '200';
+                    $error_message = "File is too large ({$size}MB). Maximum allowed size is {$max}MB.";
+                    break;
+                case 'type':
+                    $ext = isset($_GET['ext']) ? $_GET['ext'] : 'unknown';
+                    $error_message = "File type '{$ext}' is not allowed. Please upload images, documents, videos, audio files, or archives.";
+                    break;
+                case 'upload_failed':
+                case 'move_failed':
+                    $error_message = "Upload failed. Please try again.";
+                    break;
+                case 'empty_file':
+                    $error_message = "Please select a file to upload.";
+                    break;
+                case 'directory':
+                    $error_message = "Could not create upload directory. Please contact administrator.";
+                    break;
+                case 'file_too_large_ini':
+                    $error_message = "File exceeds the maximum upload size allowed by the server (200MB).";
+                    break;
+                case 'file_too_large_form':
+                    $error_message = "File exceeds the maximum upload size allowed by the form (200MB).";
+                    break;
+                case 'partial_upload':
+                    $error_message = "File was only partially uploaded. Please try again.";
+                    break;
+                case 'no_file':
+                    $error_message = "No file was selected for upload.";
+                    break;
+                case 'no_tmp_dir':
+                    $error_message = "Missing temporary upload directory. Please contact administrator.";
+                    break;
+                case 'cant_write':
+                    $error_message = "Failed to write file to disk. Please contact administrator.";
+                    break;
+                default:
+                    $error_message = "An unknown error occurred during upload.";
+            }
+            
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bx bx-error-circle"></i> ' . $error_message . '
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>';
+        }
+
         $caseId = $_GET['id'];
         $stmt = $conn->prepare("
             SELECT c.*, u.job 
@@ -61,8 +134,12 @@ include("../include/database.php");
                                 <td><?php echo htmlspecialchars($case['assigned']); ?></td>
                             </tr>
                             <tr>
+                                <th>Defendant:</th>
+                                <td><?php echo htmlspecialchars($case['defendent']); ?></td>
+                            </tr>
+                            <tr>
                                 <th>Details:</th>
-                                <td><?php echo htmlspecialchars($case['details']); ?></td>
+                                <td><?php echo nl2br(htmlspecialchars($case['details'])); ?></td>
                             </tr>
                         </table>
                     </div>
@@ -73,14 +150,28 @@ include("../include/database.php");
                             </div>
                             <div class="card-body">
                                 <?php if($case['job'] !== "Civilian" && $_SESSION['username'] !== $case['defendent']): ?>
-                                   <form enctype="multipart/form-data" action="upload.php" method="post" class="mb-3">
+                                   <form enctype="multipart/form-data" action="upload.php" method="post" class="mb-3" id="uploadForm">
                                         <div class="mb-3">
                                              <label class="form-label">Select File</label>
-                                             <input type="file" class="form-control" name="file" id="file">
+                                             <input type="file" class="form-control" name="file" id="file" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.pdf,.doc,.docx,.txt,.rtf,.odt,.xls,.xlsx,.ppt,.pptx,.wmv,.mp4,.avi,.mov,.mkv,.flv,.webm,.m4v,.3gp,.mp3,.wav,.flac,.aac,.ogg,.wma,.zip,.rar,.7z,.tar,.gz">
+                                             <div class="form-text file-size-info">
+                                                 <strong>Maximum file size: 200MB</strong><br>
+                                                 Supported formats: Images (JPG, PNG, GIF, etc.), Documents (PDF, DOC, XLS, etc.), 
+                                                 Videos (MP4, AVI, MOV, etc.), Audio (MP3, WAV, etc.), Archives (ZIP, RAR, etc.)
+                                             </div>
                                         </div>
-                                        <input type="hidden" value="<?php echo $case['caseid']; ?>" name="caseids">
-                                        <input type="hidden" value="<?php echo $case['id']; ?>" name="id">
-                                        <button type="submit" name="submit" class="btn btn-primary">
+                                        
+                                        <!-- Progress bar -->
+                                        <div class="progress mb-3 upload-progress" id="uploadProgress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                 role="progressbar" style="width: 0%" id="progressBar">
+                                                <span id="progressText">0%</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <input type="hidden" value="<?php echo htmlspecialchars($case['caseid']); ?>" name="caseids">
+                                        <input type="hidden" value="<?php echo htmlspecialchars($case['id']); ?>" name="id">
+                                        <button type="submit" name="submit" class="btn btn-primary" id="uploadBtn">
                                              <i class='bx bx-upload'></i> Upload File
                                         </button>
                                    </form>
@@ -97,12 +188,22 @@ include("../include/database.php");
                                             if($case['job'] !== "Civilian" && $_SESSION['username'] !== $case['defendent']):
                                     ?>
                                         <div class="list-group">
-                                            <?php foreach($files as $file): ?>
-                                                <a href="<?php echo $dir . basename($file); ?>" 
-                                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                                    <span><i class='bx bx-file'></i> <?php echo basename($file); ?></span>
+                                            <?php foreach($files as $file): 
+                                                $fileSize = filesize($file);
+                                                $fileSizeMB = round($fileSize / 1024 / 1024, 2);
+                                                $fileSizeDisplay = $fileSizeMB > 1 ? $fileSizeMB . ' MB' : round($fileSize / 1024, 2) . ' KB';
+                                            ?>
+                                                <a href="<?php echo $file; ?>" 
+                                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                                   target="_blank">
+                                                    <div>
+                                                        <i class='bx bx-file'></i> 
+                                                        <strong><?php echo basename($file); ?></strong>
+                                                        <br>
+                                                        <small class="text-muted">Size: <?php echo $fileSizeDisplay; ?></small>
+                                                    </div>
                                                     <span class="badge bg-primary rounded-pill">
-                                                        <?php echo date("m/d/Y", filemtime($file)); ?>
+                                                        <?php echo date("m/d/Y H:i", filemtime($file)); ?>
                                                     </span>
                                                 </a>
                                             <?php endforeach; ?>
@@ -153,6 +254,91 @@ include("../include/database.php");
     </div>
 
     <?php include("../include/footer.php"); ?>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('file');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            if (!fileInput.files[0]) {
+                e.preventDefault();
+                alert('Please select a file to upload.');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const maxSize = 200 * 1024 * 1024; // 200MB in bytes
+            
+            if (file.size > maxSize) {
+                e.preventDefault();
+                const sizeMB = Math.round(file.size / 1024 / 1024 * 100) / 100;
+                alert(`File is too large (${sizeMB}MB). Maximum allowed size is 200MB.`);
+                return;
+            }
+            
+            // Show progress and disable button
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Uploading...';
+            progressDiv.style.display = 'block';
+            
+            // Simulate progress (since we can't get real progress with standard form submission)
+            let progress = 0;
+            const interval = setInterval(function() {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                
+                progressBar.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '%';
+            }, 500);
+            
+            // Clean up interval after 30 seconds (fallback)
+            setTimeout(function() {
+                clearInterval(interval);
+            }, 30000);
+        });
+        
+        // File input change event to show file info
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const sizeMB = Math.round(file.size / 1024 / 1024 * 100) / 100;
+                const sizeDisplay = sizeMB > 1 ? sizeMB + ' MB' : Math.round(file.size / 1024 * 100) / 100 + ' KB';
+                
+                // Create or update file info display
+                let fileInfo = document.getElementById('fileInfo');
+                if (!fileInfo) {
+                    fileInfo = document.createElement('div');
+                    fileInfo.id = 'fileInfo';
+                    fileInfo.className = 'mt-2 p-2 bg-light rounded';
+                    e.target.parentNode.appendChild(fileInfo);
+                }
+                
+                let statusClass = 'text-success';
+                let statusIcon = 'bx-check-circle';
+                let statusText = 'Ready to upload';
+                
+                if (file.size > 200 * 1024 * 1024) {
+                    statusClass = 'text-danger';
+                    statusIcon = 'bx-error-circle';
+                    statusText = 'File too large (max 200MB)';
+                }
+                
+                fileInfo.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bx ${statusIcon} ${statusClass} me-2"></i>
+                        <div>
+                            <strong>${file.name}</strong><br>
+                            <small>Size: ${sizeDisplay} | Type: ${file.type || 'Unknown'}</small><br>
+                            <small class="${statusClass}">${statusText}</small>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>

@@ -69,6 +69,22 @@ $menu = "CLIENTS";
     <title>Client Profile - <?php echo htmlspecialchars($client['first_name'] . ' ' . $client['last_name']); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .upload-progress {
+            display: none;
+        }
+        .file-size-info {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        .large-file-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -125,18 +141,39 @@ $menu = "CLIENTS";
                     <div class="card-body">
                         <?php if (isset($_GET['upload_success'])): ?>
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                Document uploaded successfully!
+                                <i class='bx bx-check-circle'></i> Document uploaded successfully!
+                                <?php if (isset($_GET['file'])): ?>
+                                    <br><strong>File:</strong> <?php echo htmlspecialchars(urldecode($_GET['file'])); ?>
+                                <?php endif; ?>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         <?php endif; ?>
                         
                         <?php if (isset($_GET['upload_error'])): ?>
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class='bx bx-error-circle'></i> 
                                 <?php
                                 $error_msg = "Error uploading document. Please try again.";
-                                if($_GET['upload_error'] == '2') $error_msg = "File size too large. Maximum size is 20MB.";
-                                if($_GET['upload_error'] == '3') $error_msg = "File type not allowed. Please upload PDF, DOC, DOCX, JPG, PNG, GIF, TXT, or RTF files.";
-                                if($_GET['upload_error'] == '4') $error_msg = "Failed to save file. Please check permissions and try again.";
+                                $error_code = $_GET['upload_error'];
+                                
+                                switch($error_code) {
+                                    case '2':
+                                        $size = isset($_GET['size']) ? $_GET['size'] : 'unknown';
+                                        $error_msg = "File size too large ({$size}MB). Maximum size is 200MB.";
+                                        break;
+                                    case '3':
+                                        $ext = isset($_GET['ext']) ? $_GET['ext'] : 'unknown';
+                                        $error_msg = "File type '{$ext}' not allowed. Please upload PDF, DOC, DOCX, JPG, PNG, GIF, TXT, RTF, or video/audio files.";
+                                        break;
+                                    case '4':
+                                        $error_msg = "Upload was interrupted. Please try again.";
+                                        break;
+                                    case '5':
+                                        $error_msg = "No file was selected for upload.";
+                                        break;
+                                    default:
+                                        $error_msg = "Failed to upload file. Please check file size (max 200MB) and type, then try again.";
+                                }
                                 echo $error_msg;
                                 ?>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -145,14 +182,14 @@ $menu = "CLIENTS";
 
                         <?php if (isset($_GET['delete_success'])): ?>
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                Document deleted successfully!
+                                <i class='bx bx-check-circle'></i> Document deleted successfully!
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         <?php endif; ?>
 
                         <?php if (isset($_GET['folder_created'])): ?>
                             <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                Client folder created successfully!
+                                <i class='bx bx-info-circle'></i> Client folder created successfully!
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         <?php endif; ?>
@@ -182,7 +219,10 @@ $menu = "CLIENTS";
                                                     $icon = 'bx-file';
                                                     if($ext == 'pdf') $icon = 'bx-file-blank';
                                                     if(in_array($ext, ['doc', 'docx'])) $icon = 'bx-file-doc';
-                                                    if(in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) $icon = 'bx-image';
+                                                    if(in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'])) $icon = 'bx-image';
+                                                    if(in_array($ext, ['mp4', 'avi', 'mov', 'wmv', 'mkv', 'flv', 'webm', 'm4v', '3gp'])) $icon = 'bx-video';
+                                                    if(in_array($ext, ['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma'])) $icon = 'bx-music';
+                                                    if(in_array($ext, ['zip', 'rar', '7z', 'tar', 'gz'])) $icon = 'bx-archive';
                                                     ?>
                                                     <i class='bx <?php echo $icon; ?> me-2'></i>
                                                     <?php echo htmlspecialchars($doc['name']); ?>
@@ -226,41 +266,76 @@ $menu = "CLIENTS";
 
     <!-- Upload Modal -->
     <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="uploadModalLabel">Upload Document</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="upload_document.php" method="post" enctype="multipart/form-data">
+                <form action="upload_document.php" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <!-- Important: MAX_FILE_SIZE must come before the file input field -->
+                    <input type="hidden" name="MAX_FILE_SIZE" value="209715200"> <!-- 200MB in bytes -->
+                    <input type="hidden" name="client_id" value="<?php echo htmlspecialchars($client_id); ?>">
+                    
                     <div class="modal-body">
-                        <input type="hidden" name="client_id" value="<?php echo $client_id; ?>">
                         <div class="mb-3">
                             <label for="document" class="form-label">Select Document</label>
-                            <input type="file" class="form-control" id="document" name="document" required>
-                            <div class="form-text">
-                                <strong>Allowed file types:</strong> PDF, DOC, DOCX, JPG, PNG, GIF, TXT, RTF<br>
-                                <strong>Maximum file size:</strong> 20MB
+                            <input type="file" class="form-control" id="document" name="document" required
+                                   accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.mp4,.avi,.mov,.wmv,.mkv,.flv,.webm,.m4v,.3gp,.mp3,.wav,.flac,.aac,.ogg,.wma,.zip,.rar,.7z,.tar,.gz">
+                            <div class="form-text file-size-info">
+                                <strong>Maximum file size: 200MB</strong><br>
+                                <strong>Allowed file types:</strong> 
+                                <ul class="mb-0 mt-1">
+                                    <li><strong>Documents:</strong> PDF, DOC, DOCX, TXT, RTF, ODT, XLS, XLSX, PPT, PPTX</li>
+                                    <li><strong>Images:</strong> JPG, PNG, GIF, BMP, TIFF, WEBP</li>
+                                    <li><strong>Videos:</strong> MP4, AVI, MOV, WMV, MKV, FLV, WEBM, M4V, 3GP</li>
+                                    <li><strong>Audio:</strong> MP3, WAV, FLAC, AAC, OGG, WMA</li>
+                                    <li><strong>Archives:</strong> ZIP, RAR, 7Z, TAR, GZ</li>
+                                </ul>
                             </div>
                         </div>
+                        
+                        <!-- Debug info (remove this after testing) -->
+                        <div class="alert alert-info">
+                            <small>Debug: Client ID = <?php echo htmlspecialchars($client_id); ?></small>
+                        </div>
+                        
+                        <!-- File info display -->
+                        <div id="fileInfo" style="display: none;" class="mb-3"></div>
+                        
+                        <!-- Progress bar -->
+                        <div class="progress mb-3 upload-progress" id="uploadProgress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%" id="progressBar">
+                                <span id="progressText">0%</span>
+                            </div>
+                        </div>
+                        
                         <div class="alert alert-info" role="alert">
                             <i class='bx bx-info-circle'></i> 
-                            <strong>Large File Upload:</strong> For files larger than 25MB, the upload may take several minutes. 
+                            <strong>Large File Upload:</strong> For files larger than 50MB, the upload may take several minutes. 
                             Please be patient and do not refresh the page during upload.
+                        </div>
+                        
+                        <div id="largeFileWarning" class="large-file-warning" style="display: none;">
+                            <i class='bx bx-time'></i>
+                            <strong>Large File Detected:</strong> This file is quite large and may take a while to upload. 
+                            Please ensure you have a stable internet connection.
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary" id="uploadBtn">
-                            <span class="upload-text">Upload Document</span>
+                            <span class="upload-text">
+                                <i class='bx bx-upload'></i> Upload Document
+                            </span>
                             <span class="upload-spinner d-none">
                                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                                 Uploading...
                             </span>
                         </button>
                     </div>
-                </form>
-            </div>
+                </form>            </div>
         </div>
     </div>
 
@@ -268,36 +343,163 @@ $menu = "CLIENTS";
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Show upload progress for large files
-        document.querySelector('form[action="upload_document.php"]').addEventListener('submit', function() {
+        // File input change event
+        document.getElementById('document').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileInfo = document.getElementById('fileInfo');
+            const largeFileWarning = document.getElementById('largeFileWarning');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (file) {
+                const maxSize = 200 * 1024 * 1024; // 200MB in bytes
+                const largeFileThreshold = 50 * 1024 * 1024; // 50MB threshold for warning
+                const sizeMB = Math.round(file.size / 1024 / 1024 * 100) / 100;
+                const sizeDisplay = sizeMB > 1 ? sizeMB + ' MB' : Math.round(file.size / 1024 * 100) / 100 + ' KB';
+                
+                let statusClass = 'text-success';
+                let statusIcon = 'bx-check-circle';
+                let statusText = 'Ready to upload';
+                let canUpload = true;
+                
+                if (file.size > maxSize) {
+                    statusClass = 'text-danger';
+                    statusIcon = 'bx-error-circle';
+                    statusText = 'File too large (max 200MB)';
+                    canUpload = false;
+                } else if (file.size > largeFileThreshold) {
+                    statusClass = 'text-warning';
+                    statusIcon = 'bx-time';
+                    statusText = 'Large file - upload may take several minutes';
+                    largeFileWarning.style.display = 'block';
+                } else {
+                    largeFileWarning.style.display = 'none';
+                }
+                
+                // Get file type icon
+                const ext = file.name.split('.').pop().toLowerCase();
+                let fileIcon = 'bx-file';
+                if (['pdf'].includes(ext)) fileIcon = 'bx-file-blank';
+                if (['doc', 'docx'].includes(ext)) fileIcon = 'bx-file-doc';
+                if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'].includes(ext)) fileIcon = 'bx-image';
+                if (['mp4', 'avi', 'mov', 'wmv', 'mkv', 'flv', 'webm', 'm4v', '3gp'].includes(ext)) fileIcon = 'bx-video';
+                if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma'].includes(ext)) fileIcon = 'bx-music';
+                if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) fileIcon = 'bx-archive';
+                
+                fileInfo.innerHTML = `
+                    <div class="card">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bx ${fileIcon} fs-2 me-3 text-primary"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">${file.name}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Size: ${sizeDisplay} | Type: ${file.type || 'Unknown'}</small>
+                                        <span class="${statusClass}">
+                                            <i class="bx ${statusIcon}"></i> ${statusText}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                fileInfo.style.display = 'block';
+                uploadBtn.disabled = !canUpload;
+                
+                if (!canUpload) {
+                    uploadBtn.innerHTML = '<i class="bx bx-error-circle"></i> File Too Large';
+                    uploadBtn.classList.add('btn-danger');
+                    uploadBtn.classList.remove('btn-primary');
+                } else {
+                    uploadBtn.innerHTML = '<i class="bx bx-upload"></i> Upload Document';
+                    uploadBtn.classList.add('btn-primary');
+                    uploadBtn.classList.remove('btn-danger');
+                }
+            } else {
+                fileInfo.style.display = 'none';
+                largeFileWarning.style.display = 'none';
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="bx bx-upload"></i> Upload Document';
+                uploadBtn.classList.add('btn-primary');
+                uploadBtn.classList.remove('btn-danger');
+            }
+        });
+
+        // Form submission with progress
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('document');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadText = uploadBtn.querySelector('.upload-text');
+            const uploadSpinner = uploadBtn.querySelector('.upload-spinner');
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            if (!fileInput.files[0]) {
+                e.preventDefault();
+                alert('Please select a file to upload.');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const maxSize = 200 * 1024 * 1024; // 200MB
+            
+            if (file.size > maxSize) {
+                e.preventDefault();
+                const sizeMB = Math.round(file.size / 1024 / 1024 * 100) / 100;
+                alert(`File is too large (${sizeMB}MB). Maximum allowed size is 200MB.`);
+                return;
+            }
+            
+            // Show progress and disable button
+            uploadText.classList.add('d-none');
+            uploadSpinner.classList.remove('d-none');
+            uploadBtn.disabled = true;
+            progressDiv.style.display = 'block';
+            
+            // Simulate progress (since we can't get real progress with standard form submission)
+            let progress = 0;
+            const fileSize = file.size;
+            const isLargeFile = fileSize > 50 * 1024 * 1024; // 50MB
+            const progressIncrement = isLargeFile ? 2 : 10; // Slower progress for large files
+            const progressInterval = isLargeFile ? 1000 : 300; // Longer intervals for large files
+            
+            const interval = setInterval(function() {
+                progress += Math.random() * progressIncrement;
+                if (progress > 90) progress = 90; // Don't go to 100% until we know it's done
+                
+                progressBar.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '%';
+            }, progressInterval);
+            
+            // Clean up interval after reasonable time (based on file size)
+            const timeoutDuration = Math.min(Math.max(fileSize / 1024 / 1024 * 2000, 30000), 300000); // 2 seconds per MB, min 30s, max 5 minutes
+            setTimeout(function() {
+                clearInterval(interval);
+            }, timeoutDuration);
+        });
+
+        // Reset form when modal is closed
+        document.getElementById('uploadModal').addEventListener('hidden.bs.modal', function() {
+            const form = document.getElementById('uploadForm');
+            const fileInfo = document.getElementById('fileInfo');
+            const largeFileWarning = document.getElementById('largeFileWarning');
+            const progressDiv = document.getElementById('uploadProgress');
             const uploadBtn = document.getElementById('uploadBtn');
             const uploadText = uploadBtn.querySelector('.upload-text');
             const uploadSpinner = uploadBtn.querySelector('.upload-spinner');
             
-            uploadText.classList.add('d-none');
-            uploadSpinner.classList.remove('d-none');
-            uploadBtn.disabled = true;
-        });
-
-        // File size validation
-        document.getElementById('document').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const maxSize = 20 * 1024 * 1024; // 20MB (which is 20,480 KB)
-                if (file.size > maxSize) {
-                    alert('File size exceeds 20MB limit. Please choose a smaller file.');
-                    this.value = '';
-                    return;
-                }
-                
-                // Show warning for large files
-                if (file.size > 25 * 1024 * 1024) { // 25MB
-                    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-                    if (!confirm(`This is a large file (${sizeInMB}MB). Upload may take several minutes. Continue?`)) {
-                        this.value = '';
-                    }
-                }
-            }
+            form.reset();
+            fileInfo.style.display = 'none';
+            largeFileWarning.style.display = 'none';
+            progressDiv.style.display = 'none';
+            uploadBtn.disabled = false;
+            uploadText.classList.remove('d-none');
+            uploadSpinner.classList.add('d-none');
+            uploadBtn.innerHTML = '<i class="bx bx-upload"></i> Upload Document';
+            uploadBtn.classList.add('btn-primary');
+            uploadBtn.classList.remove('btn-danger');
         });
     </script>
 </body>

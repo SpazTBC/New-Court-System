@@ -26,9 +26,13 @@ Options -Indexes
     Deny from all
 </FilesMatch>
 
-# PHP settings for large file uploads
-php_value upload_max_filesize 20M
-php_value post_max_size 22M
+# PHP Upload Settings
+php_value upload_max_filesize 200M
+php_value post_max_size 220M
+php_value memory_limit 512M
 php_value max_execution_time 300
 php_value max_input_time 300
-php_value memory_limit 256M
+php_value max_file_uploads 20
+
+# Apache settings
+LimitRequestBody 230686720

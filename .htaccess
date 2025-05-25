@@ -3,3 +3,12 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ - [R=404,L]
 ErrorDocument 404 "<H1>Error 404</H1>You either were searching a case file that had no files in it, or you tried going to a page that wasn't there! please go back to <a href='http://localhost/login/home.php'>Home</a>"
+# Increase upload limits
+php_value upload_max_filesize 200M
+php_value post_max_size 200M
+php_value memory_limit 512M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# Increase Apache request body limit
+LimitRequestBody 209715200

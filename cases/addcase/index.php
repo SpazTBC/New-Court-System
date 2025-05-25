@@ -12,6 +12,11 @@ if ($user['job'] === "Civilian") {
     header("Location: ../index.php");
     exit();
 }
+
+// Get all users for dropdown
+$stmt = $conn->prepare("SELECT username, job, charactername FROM users ORDER BY charactername");
+$stmt->execute();
+$users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -21,6 +26,40 @@ if ($user['job'] === "Civilian") {
     <title>Add New Case</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .case-type-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .case-type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .case-type-card.criminal {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        .case-type-card.civil {
+            border-color: #17a2b8;
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+        .case-type-card.family {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+        .case-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .user-option {
+            padding: 8px 12px;
+        }
+        .user-icon {
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -35,105 +74,182 @@ if ($user['job'] === "Civilian") {
 
     <div class="container py-4">
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            <div class="col-md-10">
                 <div class="card shadow-lg">
                     <div class="card-header bg-dark text-white">
-                        <h3 class="mb-0">Create New Case</h3>
+                        <h3 class="mb-0"><i class='bx bx-file-plus'></i> Create New Case</h3>
                     </div>
                     <div class="card-body">
                         <!-- Case Number Generation Buttons -->
                         <div class="row mb-4">
-                            <div class="col-md-4">
-                                <form method="POST" action="criminal.php">
-                                    <button type="submit" name="generate" class="btn btn-danger w-100">
-                                        <i class='bx bx-file'></i> Generate Criminal Case
-                                    </button>
-                                </form>
+                            <div class="col-12 mb-3">
+                                <h5 class="text-muted"><i class='bx bx-category'></i> Select Case Type</h5>
                             </div>
-                            <div class="col-md-4">
-                                <form method="POST" action="civil.php">
-                                    <button type="submit" name="civil" class="btn btn-info w-100">
-                                        <i class='bx bx-file'></i> Generate Civil Case
+                            <div class="col-md-4 mb-3">
+                                <div class="case-type-card criminal text-white text-center p-4 rounded">
+                                    <div class="case-icon">
+                                        <i class='bx bx-shield-x'></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-2">Criminal Case</h6>
+                                    <button type="button" name="generate" class="btn btn-light btn-sm fw-bold">
+                                        <i class='bx bx-plus'></i> Generate Case Number
                                     </button>
-                                </form>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <form method="POST" action="family.php">
-                                    <button type="submit" name="family" class="btn btn-success w-100">
-                                        <i class='bx bx-file'></i> Generate Family Case
+                            <div class="col-md-4 mb-3">
+                                <div class="case-type-card civil text-white text-center p-4 rounded">
+                                    <div class="case-icon">
+                                        <i class='bx bx-balance'></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-2">Civil Case</h6>
+                                    <button type="button" name="civil" class="btn btn-light btn-sm fw-bold">
+                                        <i class='bx bx-plus'></i> Generate Case Number
                                     </button>
-                                </form>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="case-type-card family text-white text-center p-4 rounded">
+                                    <div class="case-icon">
+                                        <i class='bx bx-home-heart'></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-2">Family Case</h6>
+                                    <button type="button" name="family" class="btn btn-light btn-sm fw-bold">
+                                        <i class='bx bx-plus'></i> Generate Case Number
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
+                        <hr class="my-4">
 
                         <!-- Case Details Form -->
                         <form method="POST" action="register.php" class="needs-validation" novalidate>
                             <div class="row g-3">
+                                <div class="col-12 mb-3">
+                                    <h5 class="text-muted"><i class='bx bx-info-circle'></i> Case Information</h5>
+                                </div>
+
                                 <div class="col-md-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" id="casenum" name="casenum" placeholder="Case ID Number" required>
-                                        <label for="casenum">Case ID Number</label>
+                                        <label for="casenum"><i class='bx bx-hash'></i> Case ID Number</label>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="user" name="user" value="<?php echo htmlspecialchars($_SESSION['username']); ?>" readonly>
-                                        <label for="user">Assigned User</label>
+                                        <select class="form-select" id="user" name="user" required>
+                                            <option value="" disabled>Select Assigned User</option>
+                                            <?php foreach($users as $userOption): ?>
+                                                <option value="<?php echo htmlspecialchars($userOption['username']); ?>" 
+                                                        <?php echo ($userOption['username'] === $_SESSION['username']) ? 'selected' : ''; ?>
+                                                        data-job="<?php echo htmlspecialchars($userOption['job']); ?>">
+                                                    <?php 
+                                                    $displayName = !empty($userOption['charactername']) ? $userOption['charactername'] : $userOption['username'];
+                                                    echo htmlspecialchars($displayName . ' - ' . $userOption['job']); 
+                                                    ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <label for="user"><i class='bx bx-user'></i> Assigned User</label>
                                     </div>
                                 </div>
 
                                 <div class="col-12">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" id="date" name="date" value="<?php echo date('m/d/Y h:i:sA', time()); ?>" readonly>
-                                        <label for="date">Date</label>
+                                        <label for="date"><i class='bx bx-calendar'></i> Date Created</label>
                                     </div>
                                 </div>
 
                                 <div class="col-12">
                                     <div class="form-floating">
-                                        <textarea class="form-control" id="details" name="details" style="height: 100px" required></textarea>
-                                        <label for="details">Case Details</label>
+                                        <textarea class="form-control" id="details" name="details" style="height: 120px" placeholder="Enter case details..." required></textarea>
+                                        <label for="details"><i class='bx bx-detail'></i> Case Details</label>
                                     </div>
                                 </div>
 
                                 <!-- Shared Users Section -->
+                                <div class="col-12 mt-4 mb-3">
+                                    <h5 class="text-muted"><i class='bx bx-share'></i> Share Case With (Optional)</h5>
+                                </div>
+
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="shared1" name="shared1" placeholder="Share with user 1">
-                                        <label for="shared1">Share with User 1 (Optional)</label>
+                                        <select class="form-select" id="shared1" name="shared1">
+                                            <option value="">Select User 1 (Optional)</option>
+                                            <?php foreach($users as $userOption): ?>
+                                                <option value="<?php echo htmlspecialchars($userOption['username']); ?>">
+                                                    <?php 
+                                                    $displayName = !empty($userOption['charactername']) ? $userOption['charactername'] : $userOption['username'];
+                                                    echo htmlspecialchars($displayName . ' - ' . $userOption['job']); 
+                                                    ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <label for="shared1"><i class='bx bx-user-plus'></i> Share with User 1</label>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="shared2" name="shared2" placeholder="Share with user 2">
-                                        <label for="shared2">Share with User 2 (Optional)</label>
+                                        <select class="form-select" id="shared2" name="shared2">
+                                            <option value="">Select User 2 (Optional)</option>
+                                            <?php foreach($users as $userOption): ?>
+                                                <option value="<?php echo htmlspecialchars($userOption['username']); ?>">
+                                                    <?php 
+                                                    $displayName = !empty($userOption['charactername']) ? $userOption['charactername'] : $userOption['username'];
+                                                    echo htmlspecialchars($displayName . ' - ' . $userOption['job']); 
+                                                    ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <label for="shared2"><i class='bx bx-user-plus'></i> Share with User 2</label>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="shared3" name="shared3" placeholder="Share with user 3">
-                                        <label for="shared3">Share with User 3 (Optional)</label>
+                                        <select class="form-select" id="shared3" name="shared3">
+                                            <option value="">Select User 3 (Optional)</option>
+                                            <?php foreach($users as $userOption): ?>
+                                                <option value="<?php echo htmlspecialchars($userOption['username']); ?>">
+                                                    <?php 
+                                                    $displayName = !empty($userOption['charactername']) ? $userOption['charactername'] : $userOption['username'];
+                                                    echo htmlspecialchars($displayName . ' - ' . $userOption['job']); 
+                                                    ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <label for="shared3"><i class='bx bx-user-plus'></i> Share with User 3</label>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="shared4" name="shared4" placeholder="Share with user 4">
-                                        <label for="shared4">Share with User 4 (Optional)</label>
+                                        <select class="form-select" id="shared4" name="shared4">
+                                            <option value="">Select User 4 (Optional)</option>
+                                            <?php foreach($users as $userOption): ?>
+                                                <option value="<?php echo htmlspecialchars($userOption['username']); ?>">
+                                                    <?php 
+                                                    $displayName = !empty($userOption['charactername']) ? $userOption['charactername'] : $userOption['username'];
+                                                    echo htmlspecialchars($displayName . ' - ' . $userOption['job']); 
+                                                    ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <label for="shared4"><i class='bx bx-user-plus'></i> Share with User 4</label>
                                     </div>
                                 </div>
 
                                 <div class="col-12">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="defendent" name="defendent" required>
-                                        <label for="defendent">Name of Defendant</label>
+                                        <input type="text" class="form-control" id="defendent" name="defendent" placeholder="Enter defendant name" required>
+                                        <label for="defendent"><i class='bx bx-user-x'></i> Name of Defendant</label>
                                     </div>
                                 </div>
 
-                                <div class="col-12">
+                                <div class="col-12 mt-4">
                                     <button type="submit" name="submit" class="btn btn-primary btn-lg w-100">
                                         <i class='bx bx-save'></i> Create Case File
                                     </button>
@@ -166,27 +282,77 @@ if ($user['job'] === "Civilian") {
         })()
 
         document.addEventListener('DOMContentLoaded', function() {
-    // Criminal Case
-    document.querySelector('button[name="generate"]').addEventListener('click', function(e) {
-        e.preventDefault();
-        const caseNumber = 'CF-' + Math.floor(Math.random() * 900000) + 100000;
-        document.getElementById('casenum').value = caseNumber;
-    });
+            // Criminal Case
+            document.querySelector('button[name="generate"]').addEventListener('click', function(e) {
+                e.preventDefault();
+                const caseNumber = 'CF-' + Math.floor(Math.random() * 900000) + 100000;
+                document.getElementById('casenum').value = caseNumber;
+                
+                // Add visual feedback
+                const input = document.getElementById('casenum');
+                input.classList.add('border-danger');
+                setTimeout(() => input.classList.remove('border-danger'), 2000);
+            });
 
-    // Civil Case
-    document.querySelector('button[name="civil"]').addEventListener('click', function(e) {
-        e.preventDefault();
-        const caseNumber = 'CV-' + Math.floor(Math.random() * 900000) + 100000;
-        document.getElementById('casenum').value = caseNumber;
-    });
+            // Civil Case
+            document.querySelector('button[name="civil"]').addEventListener('click', function(e) {
+                e.preventDefault();
+                const caseNumber = 'CV-' + Math.floor(Math.random() * 900000) + 100000;
+                document.getElementById('casenum').value = caseNumber;
+                
+                // Add visual feedback
+                const input = document.getElementById('casenum');
+                input.classList.add('border-info');
+                setTimeout(() => input.classList.remove('border-info'), 2000);
+            });
 
-    // Family Case
-    document.querySelector('button[name="family"]').addEventListener('click', function(e) {
-        e.preventDefault();
-        const caseNumber = 'F-' + Math.floor(Math.random() * 900000) + 100000;
-        document.getElementById('casenum').value = caseNumber;
-    });
-});
+            // Family Case
+            document.querySelector('button[name="family"]').addEventListener('click', function(e) {
+                e.preventDefault();
+                const caseNumber = 'F-' + Math.floor(Math.random() * 900000) + 100000;
+                document.getElementById('casenum').value = caseNumber;
+                
+                // Add visual feedback
+                const input = document.getElementById('casenum');
+                input.classList.add('border-success');
+                setTimeout(() => input.classList.remove('border-success'), 2000);
+            });
+
+            // Prevent selecting the same user multiple times
+            const userSelects = ['user', 'shared1', 'shared2', 'shared3', 'shared4'];
+            
+            userSelects.forEach(selectId => {
+                document.getElementById(selectId).addEventListener('change', function() {
+                    updateUserOptions();
+                });
+            });
+
+            function updateUserOptions() {
+                const selectedUsers = [];
+                userSelects.forEach(selectId => {
+                    const value = document.getElementById(selectId).value;
+                    if (value) selectedUsers.push(value);
+                });
+
+                userSelects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    const currentValue = select.value;
+                    
+                    Array.from(select.options).forEach(option => {
+                        if (option.value && selectedUsers.includes(option.value) && option.value !== currentValue) {
+                            option.disabled = true;
+                            option.style.color = '#999';
+                        } else {
+                            option.disabled = false;
+                            option.style.color = '';
+                        }
+                    });
+                });
+            }
+
+            // Initial call to set up the options
+            updateUserOptions();
+        });
     </script>
 </body>
 </html>

@@ -53,24 +53,26 @@ $characterName = $user['charactername'];
                     $userJob = strtolower($user['job']);
                     
                     // Show approval page link for Attorney General
-                    if ($userJob == 'ag' && $jobApproved == 1) {
+                    if ($userJob == 'ag' && isset($jobApproved) && $jobApproved == 1) {
                         echo '<a href="approve/" class="btn btn-warning me-2">
                             <i class="bx bx-check-shield"></i> Pending Approvals
                         </a>';
                     }
                     
-                    // Different button text based on job
-                    if ($userJob === 'police') {
-                        $buttonText = "Submit A Case";
-                        $buttonLink = "submitcase/";
-                    } else {
-                        $buttonText = "New Case";
-                        $buttonLink = "addcase/";
+                    // Different button text based on job - Only show for non-civilians
+                    if ($userJob !== 'civilian') {
+                        if ($userJob === 'police') {
+                            $buttonText = "Submit A Case";
+                            $buttonLink = "submitcase/";
+                        } else {
+                            $buttonText = "New Case";
+                            $buttonLink = "addcase/";
+                        }
+                        echo '<a href="' . $buttonLink . '" class="btn btn-primary">
+                            <i class="bx bx-plus"></i> ' . $buttonText . '
+                        </a>';
                     }
                     ?>
-                    <a href="<?php echo $buttonLink; ?>" class="btn btn-primary">
-                        <i class="bx bx-plus"></i> <?php echo $buttonText; ?>
-                    </a>
                 </div>
             </div>
             <div class="card-body">
@@ -89,27 +91,44 @@ $characterName = $user['charactername'];
                         </thead>
                         <tbody>
                             <?php
-                            // Get the user's job
-                            $stmt = $conn->prepare("SELECT job, job_approved FROM users WHERE username = :username");
+                            // Get the user's job and character name
+                            $stmt = $conn->prepare("SELECT job, job_approved, charactername FROM users WHERE username = :username");
                             $stmt->execute(['username' => $_SESSION['username']]);
                             $user = $stmt->fetch();
                             $userJob = strtolower($user['job']);
                             $jobApproved = $user['job_approved'] ?? 1; // Default to 1 for backward compatibility
+                            $characterName = $user['charactername'];
                             $isAG = ($userJob === 'ag');
+                            $isCivilian = ($userJob === 'civilian');
 
-                            // Query to get only cases where this user is the assigned user (creator)
-                            $query = "SELECT * FROM cases WHERE assigneduser = :username";
+                            if ($isCivilian) {
+                                // For civilians, look for cases where they are the defendant (by character name)
+                                $query = "SELECT * FROM cases WHERE defendent = :charactername";
+                                $stmt = $conn->prepare($query);
+                                $stmt->bindParam(':charactername', $characterName);
+                            } else {
+                                // For non-civilians, get cases where this user is the assigned user (creator)
+                                $query = "SELECT * FROM cases WHERE assigneduser = :username";
 
-                            // For non-AG users, filter out pending cases
-                            if (!$isAG) {
-                                $query .= " AND (status != 'pending' OR status IS NULL)";
+                                // For non-AG users, filter out pending cases
+                                if (!$isAG) {
+                                    $query .= " AND (status != 'pending' OR status IS NULL)";
+                                }
+
+                                $stmt = $conn->prepare($query);
+                                $stmt->bindParam(':username', $_SESSION['username']);
                             }
 
                             // Add order by
                             $query .= " ORDER BY id DESC";
-
                             $stmt = $conn->prepare($query);
-                            $stmt->bindParam(':username', $_SESSION['username']);
+                            
+                            if ($isCivilian) {
+                                $stmt->bindParam(':charactername', $characterName);
+                            } else {
+                                $stmt->bindParam(':username', $_SESSION['username']);
+                            }
+                            
                             $stmt->execute();
                             $cases = $stmt->fetchAll();
                             
@@ -141,9 +160,11 @@ $characterName = $user['charactername'];
                                 </td>
                                 <td>
                                     <a href="view.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-info">View</a>
-                                    <a href="modify.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                                    <a href="delete.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Are you sure?')">Delete</a>
+                                    <?php if (!$isCivilian): ?>
+                                        <a href="modify.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                                        <a href="delete.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-danger" 
+                                           onclick="return confirm('Are you sure?')">Delete</a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php 
@@ -151,7 +172,13 @@ $characterName = $user['charactername'];
                             else:
                             ?>
                             <tr>
-                                <td colspan="7" class="text-center">No approved cases found</td>
+                                <td colspan="7" class="text-center">
+                                    <?php if ($isCivilian): ?>
+                                        No cases found where you are listed as a defendant.
+                                    <?php else: ?>
+                                        No approved cases found
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <?php endif; ?>
                         </tbody>
@@ -217,6 +244,7 @@ $characterName = $user['charactername'];
             </div>
         </div>
         <?php endif; ?>
+        
         <!-- Shared Cases Section -->
         <?php
         $sharedTypes = ['shared01', 'shared02', 'shared03', 'shared04'];
@@ -266,6 +294,7 @@ $characterName = $user['charactername'];
             endif;
         endforeach; 
         ?>
+        
         <!-- If user is AG, get count of pending cases -->
         <?php
             if ($userJob === 'ag' && $jobApproved == 1) {

@@ -25,7 +25,8 @@ if(isset($_FILES["file"]) && isset($_POST['caseids'])) {
     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
     
     // Updated file size limit and allowed extensions
-    $max_file_size = 20 * 1024 * 1024; // 20MB    $allowed = array("jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "txt", "rtf", "wmv", "mp4", "avi");
+    $max_file_size = 50 * 1024 * 1024; // 50MB
+    $allowed = array("jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "txt", "rtf", "wmv", "mp4", "avi");
 
     // Check file size
     if($file_size > $max_file_size) {

@@ -10,42 +10,29 @@ if (empty($characterName)) {
     exit();
 }
 
-// Get current character data
+// Get current character data and username
 $currentCharacter = getCharacterData($characterName);
 if (!$currentCharacter) {
     header("Location: ../../?error=not_found&charactername=" . urlencode($characterName));
     exit();
 }
 
-// Validate character access
-$auth = validateCharacterAccess($characterName);
-if (!$auth['valid']) {
-    $error = '';
-    switch($auth['message']) {
-        case 'Character not found':
-            $error = 'not_found';
-            break;
-        case 'Character is banned':
-            $error = 'banned';
-            break;
-        default:
-            $error = 'no_access';
-    }
-    header("Location: ../../?error=" . $error . "&charactername=" . urlencode($characterName));
+// Get the username for this character
+$usernameStmt = $conn->prepare("SELECT username FROM users WHERE charactername = ?");
+$usernameStmt->execute([$characterName]);
+$userResult = $usernameStmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$userResult) {
+    header("Location: ../../?error=user_not_found&charactername=" . urlencode($characterName));
     exit();
 }
 
-// Check if character has court access
-if (!hasCourtAccess($currentCharacter)) {
-    header("Location: ../../?error=no_access&charactername=" . urlencode($characterName));
-    exit();
-}
-
+$username = $userResult['username'];
 $characterDisplayName = $currentCharacter['charactername'] ?? ($currentCharacter['first_name'] . ' ' . $currentCharacter['last_name']);
 $characterJob = $currentCharacter['job'];
 
-// Get all users for sharing dropdown - include job information
-$usersStmt = $conn->prepare("SELECT DISTINCT charactername, job FROM users WHERE charactername IS NOT NULL AND charactername != '' AND charactername != ? ORDER BY charactername");
+// Get all users for sharing dropdown - get both charactername and username
+$usersStmt = $conn->prepare("SELECT DISTINCT charactername, username, job FROM users WHERE charactername IS NOT NULL AND charactername != '' AND charactername != ? ORDER BY charactername");
 $usersStmt->execute([$characterName]); // Exclude current user from sharing options
 $allUsers = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -167,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, evidence, status, type, shared01, shared02, shared03, shared04) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $data = [
                     $caseId,
-                    $characterDisplayName,
+                    $username,  // Use username instead of characterDisplayName
                     date('Y-m-d H:i:s'),
                     $details,
                     $defendant,
@@ -178,14 +165,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $shared02 ?: '',
                     $shared03 ?: '',
                     $shared04 ?: ''
-                    
                 ];
             } elseif ($evidenceColumnExists) {
                 // If only evidence column exists
                 $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, evidence, status, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $data = [
                     $caseId,
-                    $characterDisplayName,
+                    $username,  // Use username instead of characterDisplayName
                     date('Y-m-d H:i:s'),
                     $details,
                     $defendant,
@@ -198,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, status, type, shared01, shared02, shared03, shared04) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $data = [
                     $caseId,
-                    $characterDisplayName,
+                    $username,  // Use username instead of characterDisplayName
                     date('Y-m-d H:i:s'),
                     $details,
                     $defendant,
@@ -214,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, status, type) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 $data = [
                     $caseId,
-                    $characterDisplayName,
+                    $username,  // Use username instead of characterDisplayName
                     date('Y-m-d H:i:s'),
                     $details,
                     $defendant,
@@ -381,8 +367,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <select class="form-select user-select" id="shared01" name="shared01">
                                                 <option value="">Select a user...</option>
                                                 <?php foreach ($allUsers as $user): ?>
-                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
-                                                            <?php echo (isset($shared01) && $shared01 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                    <option value="<?php echo htmlspecialchars($user['username']); ?>" 
+                                                            <?php echo (isset($shared01) && $shared01 === $user['username']) ? 'selected' : ''; ?>>
                                                         <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -394,8 +380,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <select class="form-select user-select" id="shared02" name="shared02">
                                                 <option value="">Select a user...</option>
                                                 <?php foreach ($allUsers as $user): ?>
-                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
-                                                            <?php echo (isset($shared02) && $shared02 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                    <option value="<?php echo htmlspecialchars($user['username']); ?>" 
+                                                            <?php echo (isset($shared02) && $shared02 === $user['username']) ? 'selected' : ''; ?>>
                                                         <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -407,8 +393,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <select class="form-select user-select" id="shared03" name="shared03">
                                                 <option value="">Select a user...</option>
                                                 <?php foreach ($allUsers as $user): ?>
-                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
-                                                            <?php echo (isset($shared03) && $shared03 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                    <option value="<?php echo htmlspecialchars($user['username']); ?>" 
+                                                            <?php echo (isset($shared03) && $shared03 === $user['username']) ? 'selected' : ''; ?>>
                                                         <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -420,8 +406,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <select class="form-select user-select" id="shared04" name="shared04">
                                                 <option value="">Select a user...</option>
                                                 <?php foreach ($allUsers as $user): ?>
-                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
-                                                            <?php echo (isset($shared04) && $shared04 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                    <option value="<?php echo htmlspecialchars($user['username']); ?>" 
+                                                            <?php echo (isset($shared04) && $shared04 === $user['username']) ? 'selected' : ''; ?>>
                                                         <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
                                                     </option>
                                                 <?php endforeach; ?>

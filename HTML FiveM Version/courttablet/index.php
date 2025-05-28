@@ -144,6 +144,13 @@ if ($autoLogin && !empty($firstName) && !empty($lastName)) {
                             </small>
                         </div>
 
+                        <!-- Registration Link -->
+                        <div class="text-center mt-3">
+                            <p class="mb-0">Don't have an account? 
+                                <a href="login/register.php" class="text-decoration-none">Register here</a>
+                            </p>
+                        </div>
+
                         <!-- FiveM Integration Status -->
                         <div class="mt-3">
                             <div class="alert alert-info" id="fivemStatus">

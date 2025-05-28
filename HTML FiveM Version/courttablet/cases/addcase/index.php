@@ -47,7 +47,7 @@ if ($debugMode) {
 }
 
 // Check if user has permission to add cases - EXPANDED PERMISSIONS
-$allowedJobs = ['police', 'lawyer', 'judge', 'admin', 'Police', 'Lawyer', 'Judge', 'Admin', 'POLICE', 'LAWYER', 'JUDGE', 'ADMIN'];
+$allowedJobs = ['police', 'lawyer', 'judge', 'admin', 'Police', 'Lawyer', 'Judge', 'Admin', 'POLICE', 'LAWYER', 'JUDGE', 'ADMIN', 'ag'];
 $hasPermission = in_array($characterJob, $allowedJobs);
 
 // If still no permission, let's be more flexible and check for partial matches
@@ -61,7 +61,8 @@ if (!$hasPermission) {
         strpos($jobLower, 'attorney') !== false ||
         strpos($jobLower, 'prosecutor') !== false ||
         strpos($jobLower, 'detective') !== false ||
-        strpos($jobLower, 'officer') !== false
+        strpos($jobLower, 'officer') !== false ||
+        strpos($jobLower, 'ag') !== false
     );
 }
 
@@ -86,7 +87,8 @@ function getCaseStatus($job) {
     if (strpos($jobLower, 'judge') !== false || 
         strpos($jobLower, 'lawyer') !== false || 
         strpos($jobLower, 'attorney') !== false || 
-        strpos($jobLower, 'prosecutor') !== false || 
+        strpos($jobLower, 'prosecutor') !== false ||
+        strpos($jobLower, 'ag') !== false || 
         strpos($jobLower, 'admin') !== false) {
         return 'approved';
     }
@@ -110,6 +112,26 @@ function getCaseType($job, $selectedType) {
     return $selectedType;
 }
 
+// Function to generate case number based on type
+function generateCaseNumber($type) {
+    $typeLower = strtolower($type);
+    $randomNumber = mt_rand(100000, 999999);
+    
+    if ($typeLower === 'criminal') {
+        return 'CF-' . $randomNumber;
+    } elseif ($typeLower === 'civil') {
+        return 'CV-' . $randomNumber;
+    } elseif ($typeLower === 'family') {
+        return 'F-' . $randomNumber;
+    } elseif ($typeLower === 'traffic') {
+        return 'TF-' . $randomNumber;
+    } elseif ($typeLower === 'property') {
+        return 'PR-' . $randomNumber;
+    } else {
+        return 'OT-' . $randomNumber; // Other cases
+    }
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $defendant = trim($_POST['defendant'] ?? '');
@@ -126,14 +148,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             // Generate case ID
-            $caseId = 'CASE-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $caseId = generateCaseNumber($type);
             
-            // Check if case ID already exists
+            // Check if case ID already exists (very unlikely but good practice)
             $checkStmt = $conn->prepare("SELECT id FROM cases WHERE caseid = ?");
             $checkStmt->execute([$caseId]);
             
             while ($checkStmt->fetch()) {
-                $caseId = 'CASE-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                $caseId = generateCaseNumber($type);
                 $checkStmt->execute([$caseId]);
             }
             
@@ -327,13 +349,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label for="type" class="form-label">Case Type <span class="text-danger">*</span></label>
                                     <select class="form-select" id="type" name="type" required>
                                         <option value="">Select case type...</option>
-                                        <option value="Criminal" <?php echo (isset($type) && $type === 'Criminal') ? 'selected' : ''; ?>>Criminal</option>
-                                        <option value="Civil" <?php echo (isset($type) && $type === 'Civil') ? 'selected' : ''; ?>>Civil</option>
-                                        <option value="Traffic" <?php echo (isset($type) && $type === 'Traffic') ? 'selected' : ''; ?>>Traffic</option>
-                                        <option value="Family" <?php echo (isset($type) && $type === 'Family') ? 'selected' : ''; ?>>Family</option>
-                                        <option value="Property" <?php echo (isset($type) && $type === 'Property') ? 'selected' : ''; ?>>Property</option>
-                                        <option value="Other" <?php echo (isset($type) && $type === 'Other') ? 'selected' : ''; ?>>Other</option>
+                                        <option value="Criminal" <?php echo (isset($type) && $type === 'Criminal') ? 'selected' : ''; ?>>Criminal </option>
+                                        <option value="Civil" <?php echo (isset($type) && $type === 'Civil') ? 'selected' : ''; ?>>Civil </option>
+                                        <option value="Traffic" <?php echo (isset($type) && $type === 'Traffic') ? 'selected' : ''; ?>>Traffic </option>
+                                        <option value="Family" <?php echo (isset($type) && $type === 'Family') ? 'selected' : ''; ?>>Family </option>
                                     </select>
+                                    <div class="form-text">Case number will be automatically generated based on type</div>
                                 </div>
                             </div>
 

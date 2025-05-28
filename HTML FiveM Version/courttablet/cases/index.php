@@ -112,7 +112,7 @@ function isSupervisor($username) {
                     <?php
                     // Show approval page link for Attorney General
                     if ($userJob == 'ag' && isset($jobApproved) && $jobApproved == 1) {
-                        echo '<a href="approve/?character_name=' . urlencode($characterName) . '" class="btn btn-warning me-2">
+                        echo '<a href="approve/?character_name=' . urlencode($characterDisplayName) . '" class="btn btn-warning me-2">
                             <i class="bx bx-check-shield"></i> Pending Approvals
                         </a>';
                     }
@@ -236,7 +236,7 @@ function isSupervisor($username) {
         <?php if(isSupervisor($username)): ?>
         <div class="card shadow-lg mb-4">
             <div class="card-header bg-dark text-white">
-                <h3 class="mb-0">Supervised Cases</h3>
+                <h3 class="mb-0">Supervised Cases </h3>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -350,7 +350,7 @@ function isSupervisor($username) {
                 if ($pendingCount > 0) {
                     echo '<div class="alert alert-warning">
                         <i class="bx bx-bell"></i> You have ' . $pendingCount . ' pending case' . ($pendingCount > 1 ? 's' : '') . ' to review.
-                        <a href="approve/?character_name=' . urlencode($characterName) . '" class="btn btn-sm btn-warning ms-2">Review Now</a>
+                        <a href="approve/?character_name=' . urlencode($characterDisplayName) . '" class="btn btn-sm btn-warning ms-2">Review Now</a>
                     </div>';
                 }
             }

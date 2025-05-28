@@ -1,18 +1,60 @@
 <?php
-session_start();
-$menu = "APPROVALS";
-include('../../include/database.php');
+require_once '../../include/database.php';
+require_once '../../auth/character_auth.php';
 
-// Check if user is AG
-$stmt = $conn->prepare("SELECT job FROM users WHERE username = :username");
-$stmt->execute(['username' => $_SESSION['username']]);
-$user = $stmt->fetch();
-$userJob = strtolower($user['job']);
+// Get character name from URL parameters
+$characterName = $_GET['charactername'] ?? $_GET['character_name'] ?? '';
 
-if ($userJob !== 'ag') {
-    // Redirect non-AG users
-    header('Location: ../index.php');
-    exit;
+if (empty($characterName)) {
+    header("Location: ../../?error=character_not_found");
+    exit();
+}
+
+// Get current character data
+$currentCharacter = getCharacterData($characterName);
+if (!$currentCharacter) {
+    header("Location: ../../?error=not_found&charactername=" . urlencode($characterName));
+    exit();
+}
+
+// Validate character access
+$auth = validateCharacterAccess($characterName);
+if (!$auth['valid']) {
+    $error = '';
+    switch($auth['message']) {
+        case 'Character not found':
+            $error = 'not_found';
+            break;
+        case 'Character is banned':
+            $error = 'banned';
+            break;
+        default:
+            $error = 'no_access';
+    }
+    header("Location: ../../?error=" . $error . "&charactername=" . urlencode($characterName));
+    exit();
+}
+
+$characterDisplayName = $currentCharacter['charactername'];
+$characterJob = $currentCharacter['job'];
+
+// Get the username for this character
+$usernameStmt = $conn->prepare("SELECT username, job_approved FROM users WHERE charactername = ?");
+$usernameStmt->execute([$characterName]);
+$userResult = $usernameStmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$userResult) {
+    header("Location: ../../?error=user_not_found&charactername=" . urlencode($characterName));
+    exit();
+}
+
+$username = $userResult['username'];
+$jobApproved = $userResult['job_approved'];
+
+// Check if user is AG and approved
+if (strtolower($characterJob) !== 'ag' || $jobApproved != 1) {
+    header("Location: ../index.php?character_name=" . urlencode($characterName) . "&error=no_permission");
+    exit();
 }
 
 // Handle approval/denial
@@ -43,12 +85,13 @@ if(isset($_POST['action']) && isset($_POST['case_id'])) {
             'type' => $type,
             'id' => $caseId
         ]);
-    } else {        $query = "UPDATE cases SET status = 'denied' WHERE id = :id";
+    } else {
+        $query = "UPDATE cases SET status = 'denied' WHERE id = :id";
         $stmt = $conn->prepare($query);
         $stmt->execute(['id' => $caseId]);
     }
     
-    header('Location: index.php');
+    header('Location: index.php?character_name=' . urlencode($characterName));
     exit;
 }
 
@@ -73,9 +116,8 @@ if(isset($_GET['view_case'])) {
         <div class="container">
             <div class="navbar-brand d-flex align-items-center">
                 <span class="fw-bold text-white">Blackwood & Associates</span>
-                <span class="ms-2">Welcome <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                <span class="ms-2">Welcome <?php echo htmlspecialchars($characterDisplayName); ?></span>
             </div>
-            <?php include("../../include/menu.php"); ?>
         </div>
     </nav>
 
@@ -126,7 +168,7 @@ if(isset($_GET['view_case'])) {
                                                 <i class='bx bx-x'></i> Deny
                                             </button>
                                         </form>
-                                        <a href="../view.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-info">
+                                        <a href="../view.php?id=<?php echo $case['id']; ?>&character_name=<?php echo urlencode($characterName); ?>" class="btn btn-sm btn-info">
                                             <i class='bx bx-detail'></i> View
                                         </a>
                                     </div>
@@ -192,7 +234,8 @@ if(isset($_GET['view_case'])) {
                                                 </form>
                                             </div>
                                         </div>
-                                    </div>                                </td>
+                                    </div>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -205,7 +248,7 @@ if(isset($_GET['view_case'])) {
                 <?php endif; ?>
                 
                 <div class="mt-3">
-                    <a href="../index.php" class="btn btn-secondary">
+                    <a href="../index.php?character_name=<?php echo urlencode($characterName); ?>" class="btn btn-secondary">
                         <i class='bx bx-arrow-back'></i> Back to Cases
                     </a>
                 </div>
@@ -213,7 +256,6 @@ if(isset($_GET['view_case'])) {
         </div>
     </div>
 
-    <?php include("../../include/footer.php"); ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>

@@ -1,5 +1,0 @@
-Array
-(
-    [caseids] => CF-405113100000
-    [submit] => 
-)

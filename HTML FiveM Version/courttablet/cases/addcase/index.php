@@ -44,6 +44,11 @@ if (!hasCourtAccess($currentCharacter)) {
 $characterDisplayName = $currentCharacter['charactername'] ?? ($currentCharacter['first_name'] . ' ' . $currentCharacter['last_name']);
 $characterJob = $currentCharacter['job'];
 
+// Get all users for sharing dropdown - include job information
+$usersStmt = $conn->prepare("SELECT DISTINCT charactername, job FROM users WHERE charactername IS NOT NULL AND charactername != '' AND charactername != ? ORDER BY charactername");
+$usersStmt->execute([$characterName]); // Exclude current user from sharing options
+$allUsers = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+
 // Debug: Let's see what job we're getting
 $debugMode = isset($_GET['debug']);
 if ($debugMode) {
@@ -124,6 +129,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $details = trim($_POST['details'] ?? '');
     $type = trim($_POST['type'] ?? '');
     $evidence = trim($_POST['evidence'] ?? '');
+    $shared01 = trim($_POST['shared01'] ?? '');
+    $shared02 = trim($_POST['shared02'] ?? '');
+    $shared03 = trim($_POST['shared03'] ?? '');
+    $shared04 = trim($_POST['shared04'] ?? '');
     
     if (empty($defendant) || empty($details) || empty($type)) {
         $error_message = "Please fill in all required fields.";
@@ -149,8 +158,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $checkColumn = $conn->query("SHOW COLUMNS FROM cases LIKE 'evidence'");
             $evidenceColumnExists = $checkColumn->rowCount() > 0;
             
-            if ($evidenceColumnExists) {
-                // If evidence column exists, include it in the query
+            // Check if shared columns exist
+            $checkSharedColumns = $conn->query("SHOW COLUMNS FROM cases WHERE Field IN ('shared01', 'shared02', 'shared03', 'shared04')");
+            $sharedColumnsExist = $checkSharedColumns->rowCount() > 0;
+            
+            if ($evidenceColumnExists && $sharedColumnsExist) {
+                // If both evidence and shared columns exist
+                $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, evidence, status, type, shared01, shared02, shared03, shared04) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $data = [
+                    $caseId,
+                    $characterDisplayName,
+                    date('Y-m-d H:i:s'),
+                    $details,
+                    $defendant,
+                    $evidence,
+                    $caseStatus,
+                    $caseType,
+                    $shared01 ?: null,
+                    $shared02 ?: null,
+                    $shared03 ?: null,
+                    $shared04 ?: null
+                ];
+            } elseif ($evidenceColumnExists) {
+                // If only evidence column exists
                 $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, evidence, status, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $data = [
                     $caseId,
@@ -162,8 +192,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $caseStatus,
                     $caseType
                 ];
+            } elseif ($sharedColumnsExist) {
+                // If only shared columns exist
+                $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, status, type, shared01, shared02, shared03, shared04) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $data = [
+                    $caseId,
+                    $characterDisplayName,
+                    date('Y-m-d H:i:s'),
+                    $details,
+                    $defendant,
+                    $caseStatus,
+                    $caseType,
+                    $shared01 ?: null,
+                    $shared02 ?: null,
+                    $shared03 ?: null,
+                    $shared04 ?: null
+                ];
             } else {
-                // If evidence column doesn't exist, exclude it from the query
+                // If neither evidence nor shared columns exist
                 $query = "INSERT INTO cases (caseid, assigneduser, assigned, details, defendent, status, type) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 $data = [
                     $caseId,
@@ -184,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success_message = "Case " . $caseId . " has been successfully created and is " . $statusMessage . "!";
             
             // Clear form data
-            $defendant = $details = $type = $evidence = '';
+            $defendant = $details = $type = $evidence = $shared01 = $shared02 = $shared03 = $shared04 = '';
             
         } catch (Exception $e) {
             $error_message = "Error creating case: " . $e->getMessage();
@@ -201,6 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Add New Case - Court System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -219,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            <div class="col-md-10">
                 <?php if ($debugMode): ?>
                     <div class="alert alert-info mb-4">
                         <h5>Debug Information</h5>
@@ -314,6 +362,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="form-text">Describe any evidence related to this case (optional)</div>
                             </div>
 
+                            <!-- Case Sharing Section -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class='bx bx-share-alt'></i> Share Case Access
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-3">
+                                        <small>Select up to 4 users to share this case with. Shared users will be able to view and work on this case.</small>
+                                    </p>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="shared01" class="form-label">Share with User 1</label>
+                                            <select class="form-select user-select" id="shared01" name="shared01">
+                                                <option value="">Select a user...</option>
+                                                <?php foreach ($allUsers as $user): ?>
+                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
+                                                            <?php echo (isset($shared01) && $shared01 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <label for="shared02" class="form-label">Share with User 2</label>
+                                            <select class="form-select user-select" id="shared02" name="shared02">
+                                                <option value="">Select a user...</option>
+                                                <?php foreach ($allUsers as $user): ?>
+                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
+                                                            <?php echo (isset($shared02) && $shared02 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <label for="shared03" class="form-label">Share with User 3</label>
+                                            <select class="form-select user-select" id="shared03" name="shared03">
+                                                <option value="">Select a user...</option>
+                                                <?php foreach ($allUsers as $user): ?>
+                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
+                                                            <?php echo (isset($shared03) && $shared03 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <label for="shared04" class="form-label">Share with User 4</label>
+                                            <select class="form-select user-select" id="shared04" name="shared04">
+                                                <option value="">Select a user...</option>
+                                                <?php foreach ($allUsers as $user): ?>
+                                                    <option value="<?php echo htmlspecialchars($user['charactername']); ?>" 
+                                                            <?php echo (isset($shared04) && $shared04 === $user['charactername']) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($user['charactername'] . ' (' . $user['job'] . ')'); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="card bg-light">
@@ -349,5 +465,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for user selection dropdowns
+            $('.user-select').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select a user...',
+                allowClear: true,
+                width: '100%'
+            });
+            
+            // Prevent selecting the same user multiple times
+            $('.user-select').on('change', function() {
+                var selectedValues = [];
+                var currentSelect = $(this);
+                var currentValue = currentSelect.val();
+                
+                // Collect all selected values
+                $('.user-select').each(function() {
+                    if ($(this).val() && $(this).val() !== '') {
+                        selectedValues.push($(this).val());
+                    }
+                });
+                
+                // Disable already selected options in other dropdowns
+                $('.user-select').each(function() {
+                    var dropdown = $(this);
+                    
+                    dropdown.find('option').each(function() {
+                        var option = $(this);
+                        var optionValue = option.val();
+                        
+                        if (optionValue !== '' && selectedValues.includes(optionValue) && dropdown.val() !== optionValue) {
+                            option.prop('disabled', true);
+                        } else {
+                            option.prop('disabled', false);
+                        }
+                    });
+                    
+                    // Refresh Select2 to show disabled options
+                    dropdown.trigger('change.select2');
+                });
+            });
+            
+            // Trigger change event on page load to handle pre-selected values
+            $('.user-select').trigger('change');
+        });
+    </script>
 </body>
 </html>

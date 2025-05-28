@@ -1,0 +1,121 @@
+# Protect client directories - allow PHP files to execute
+<Files "*.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Allow access to document files for authenticated users and FiveM server
+<FilesMatch "\.(pdf|doc|docx|jpg|jpeg|png|gif|txt|rtf)$">
+    Order Deny,Allow
+    Deny from all
+    
+    # Allow localhost (for local development)
+    Allow from 127.0.0.1
+    Allow from ::1
+    Allow from localhost
+    
+    # Allow your specific network
+    Allow from 192.168.12.1
+    
+    # Allow common local network ranges (uncomment if needed)
+    # Allow from 192.168.0.0/16
+    # Allow from 10.0.0.0/8
+    # Allow from 172.16.0.0/12
+    
+    # Add your FiveM server IP here if different
+    # Allow from YOUR_FIVEM_SERVER_IP
+</FilesMatch>
+
+# Special handling for PDF files to fix viewing issues
+<FilesMatch "\.pdf$">
+    # Set correct MIME type
+    Header set Content-Type "application/pdf"
+    
+    # Allow inline viewing (don't force download)
+    Header set Content-Disposition "inline"
+    
+    # Remove headers that might interfere with PDF viewing
+    Header unset X-Frame-Options
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Ensure proper content type detection
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Allow caching for better performance
+    Header set Cache-Control "private, max-age=3600"
+    
+    # Remove headers that might cause issues
+    Header unset Pragma
+    Header unset Expires
+    
+    # Allow same-origin access
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type"
+</FilesMatch>
+
+# Prevent directory browsing
+Options -Indexes
+
+# Prevent access to README files
+<Files "README.txt">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Prevent access to sensitive files
+<FilesMatch "\.(log|bak|backup|old|tmp|temp)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Prevent access to .htaccess itself
+<Files ".htaccess">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Prevent access to client folder structure files
+<Files "*.conf">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# PHP Upload Settings for large files
+php_value upload_max_filesize 200M
+php_value post_max_size 220M
+php_value memory_limit 512M
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value max_file_uploads 20
+
+# Apache settings
+LimitRequestBody 230686720
+
+# Security headers for document access (except PDFs which have special handling above)
+<FilesMatch "\.(doc|docx|jpg|jpeg|png|gif|txt|rtf)$">
+    Header set X-Content-Type-Options nosniff
+    Header set X-Frame-Options SAMEORIGIN
+    Header set Referrer-Policy strict-origin-when-cross-origin
+</FilesMatch>
+
+# Image-specific headers
+<FilesMatch "\.(jpg|jpeg|png|gif|bmp|webp)$">
+    Header set Content-Type "image/*"
+    Header set Cache-Control "private, max-age=86400"
+</FilesMatch>
+
+# Text file headers
+<FilesMatch "\.(txt|rtf)$">
+    Header set Content-Type "text/plain; charset=utf-8"
+    Header set Content-Disposition "inline"
+</FilesMatch>
+
+# Document file headers
+<FilesMatch "\.(doc|docx)$">
+    Header set Content-Disposition "attachment"
+</FilesMatch>
+
+# Error handling
+ErrorDocument 403 "Access Denied - Authentication Required"
+ErrorDocument 404 "File Not Found"

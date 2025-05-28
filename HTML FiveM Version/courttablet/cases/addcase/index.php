@@ -174,10 +174,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $evidence,
                     $caseStatus,
                     $caseType,
-                    $shared01 ?: null,
-                    $shared02 ?: null,
-                    $shared03 ?: null,
-                    $shared04 ?: null
+                    $shared01 ?: '',
+                    $shared02 ?: '',
+                    $shared03 ?: '',
+                    $shared04 ?: ''
+                    
                 ];
             } elseif ($evidenceColumnExists) {
                 // If only evidence column exists
@@ -203,10 +204,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $defendant,
                     $caseStatus,
                     $caseType,
-                    $shared01 ?: null,
-                    $shared02 ?: null,
-                    $shared03 ?: null,
-                    $shared04 ?: null
+                    $shared01 ?: '',
+                    $shared02 ?: '',
+                    $shared03 ?: '',
+                    $shared04 ?: ''
                 ];
             } else {
                 // If neither evidence nor shared columns exist

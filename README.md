@@ -24,6 +24,12 @@ If you want to use both the FiveM + The Web Version place the Web Version as pre
 
 Insert sd-tablet into your server and configure to your liking.
 
+
+IF YOUR SERVER USES HTTPS (SSL) YOU WILL NEED TO CHANGE THE URL IN THE CONFIG and html/js/script.js TO MATCH YOUR SERVERS URL (https://localhost) instead of http://localhost/ otherwise your tablet will not work.
+
+If you're using QBOX, DO NOT make your database courtsystem as QBOX has a users field and will conflict with your tablet. If you did do this, please make another database and name it something else, then please correct it in the HTML FiveM version in includes/database.php with the new database name!
+
+
 Last Step:
 
 ENJOY!

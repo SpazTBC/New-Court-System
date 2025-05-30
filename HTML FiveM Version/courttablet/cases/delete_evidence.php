@@ -1,5 +1,5 @@
 <?php
-require_once '..includedatabase.php';
+require_once '..include/database.php';
 require_once '../auth/character_auth.php';
 
  Get character name

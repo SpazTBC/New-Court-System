@@ -28,7 +28,7 @@ end
 -- Framework-specific player getter
 local function GetPlayer(source)
     if FrameworkName == 'qbox' then
-        return exports.qbx_core:GetPlayer(source)
+        return Framework:GetPlayer(source)
     elseif FrameworkName == 'qbcore' then
         return Framework.Functions.GetPlayer(source)
     elseif FrameworkName == 'esx' then
@@ -67,30 +67,28 @@ local function GetCharacterData(Player)
     return nil
 end
 
--- Server event to get character data (works for all frameworks)
-RegisterServerEvent('courttablet:getCharacterData')
-AddEventHandler('courttablet:getCharacterData', function()
-    local src = source
-    local Player = GetPlayer(src)
-    
-    if Player then
-        local characterData = GetCharacterData(Player)
+-- Get character data from framework
+if FrameworkName == 'qbox' then
+    Framework:CreateCallback('courttablet:getCharacterData', function(source, cb)
+        local src = source
+        local Player = GetPlayer(src)
         
-        if Config.Debug then
-            print("Server sending character data for " .. FrameworkName .. ":", json.encode(characterData))
+        if Player then
+            local characterData = GetCharacterData(Player)
+            
+            if Config.Debug then
+                print("Server sending QBox character data:", json.encode(characterData))
+            end
+            
+            cb(characterData)
+        else
+            if Config.Debug then
+                print("No QBox player data found for source:", src)
+            end
+            cb({error = "No player data found"})
         end
-        
-        TriggerClientEvent('courttablet:receiveCharacterData', src, characterData)
-    else
-        if Config.Debug then
-            print("No player data found for source:", src)
-        end
-        TriggerClientEvent('courttablet:receiveCharacterData', src, {error = "No player data found"})
-    end
-end)
-
--- Framework-specific callbacks (only for QBCore and ESX)
-if FrameworkName == 'qbcore' then
+    end)
+elseif FrameworkName == 'qbcore' then
     Framework.Functions.CreateCallback('courttablet:getCharacterData', function(source, cb)
         local src = source
         local Player = GetPlayer(src)

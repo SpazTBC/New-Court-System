@@ -1,7 +1,7 @@
 Config = {}
 
--- Framework detection (auto-detects QBCore or ESX)
-Config.Framework = 'auto' -- 'auto', 'qbcore', or 'esx'
+-- Framework detection (auto-detects QBCore, QBox, or ESX)
+Config.Framework = 'qbox' -- 'auto', 'qbcore', 'qbox', or 'esx'
 
 -- Court system settings
 Config.CourtURL = 'http://localhost/courttablet/'

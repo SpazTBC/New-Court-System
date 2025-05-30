@@ -5,13 +5,19 @@ local FrameworkName = nil
 -- Auto-detect framework
 Citizen.CreateThread(function()
     if Config.Framework == 'auto' then
-        if GetResourceState('qb-core') == 'started' then
+        if GetResourceState('qbox-core') == 'started' or GetResourceState('qbx_core') == 'started' then
+            Framework = exports.qbx_core
+            FrameworkName = 'qbox'
+        elseif GetResourceState('qb-core') == 'started' then
             Framework = exports['qb-core']:GetCoreObject()
             FrameworkName = 'qbcore'
         elseif GetResourceState('es_extended') == 'started' then
             Framework = exports['es_extended']:getSharedObject()
             FrameworkName = 'esx'
         end
+    elseif Config.Framework == 'qbox' then
+        Framework = exports.qbx_core
+        FrameworkName = 'qbox'
     elseif Config.Framework == 'qbcore' then
         Framework = exports['qb-core']:GetCoreObject()
         FrameworkName = 'qbcore'
@@ -38,7 +44,9 @@ end
 
 -- Framework-specific notification function
 local function ShowNotification(message, type)
-    if FrameworkName == 'qbcore' then
+    if FrameworkName == 'qbox' then
+        Framework:Notify(message, type or "primary")
+    elseif FrameworkName == 'qbcore' then
         Framework.Functions.Notify(message, type or "primary")
     elseif FrameworkName == 'esx' then
         Framework.ShowNotification(message)
@@ -52,7 +60,22 @@ end
 
 -- Framework-specific player data getter
 function GetPlayerCharacterData()
-    if FrameworkName == 'qbcore' then
+    if FrameworkName == 'qbox' then
+        local PlayerData = Framework:GetPlayerData()
+        
+        if PlayerData and PlayerData.charinfo then
+            if Config.Debug then
+                print("QBox data found:", json.encode(PlayerData.charinfo))
+            end
+            
+            return {
+                firstName = PlayerData.charinfo.firstname,
+                lastName = PlayerData.charinfo.lastname,
+                cid = PlayerData.citizenid,
+                job = PlayerData.job.name
+            }
+        end
+    elseif FrameworkName == 'qbcore' then
         local PlayerData = Framework.Functions.GetPlayerData()
         
         if PlayerData and PlayerData.charinfo then
@@ -328,7 +351,21 @@ end, false)
 RegisterKeyMapping('courttablet', 'Open Court Tablet', 'keyboard', Config.OpenKey)
 
 -- Framework-specific events
-if FrameworkName == 'qbcore' then
+if FrameworkName == 'qbox' then
+    RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+        characterData = nil
+        if Config.Debug then
+            print("QBox player loaded, character data reset")
+        end
+    end)
+    
+    RegisterNetEvent('qbx_core:client:playerLoaded', function()
+        characterData = nil
+        if Config.Debug then
+            print("QBox player loaded (qbx_core event), character data reset")
+        end
+    end)
+elseif FrameworkName == 'qbcore' then
     RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         characterData = nil
         if Config.Debug then

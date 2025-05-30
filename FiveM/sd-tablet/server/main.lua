@@ -4,13 +4,19 @@ local FrameworkName = nil
 
 -- Auto-detect framework
 if Config.Framework == 'auto' then
-    if GetResourceState('qb-core') == 'started' then
+    if GetResourceState('qbox-core') == 'started' or GetResourceState('qbx_core') == 'started' then
+        Framework = exports.qbx_core
+        FrameworkName = 'qbox'
+    elseif GetResourceState('qb-core') == 'started' then
         Framework = exports['qb-core']:GetCoreObject()
         FrameworkName = 'qbcore'
     elseif GetResourceState('es_extended') == 'started' then
         Framework = exports['es_extended']:getSharedObject()
         FrameworkName = 'esx'
     end
+elseif Config.Framework == 'qbox' then
+    Framework = exports.qbx_core
+    FrameworkName = 'qbox'
 elseif Config.Framework == 'qbcore' then
     Framework = exports['qb-core']:GetCoreObject()
     FrameworkName = 'qbcore'
@@ -21,7 +27,9 @@ end
 
 -- Framework-specific player getter
 local function GetPlayer(source)
-    if FrameworkName == 'qbcore' then
+    if FrameworkName == 'qbox' then
+        return exports.qbx_core:GetPlayer(source)
+    elseif FrameworkName == 'qbcore' then
         return Framework.Functions.GetPlayer(source)
     elseif FrameworkName == 'esx' then
         return Framework.GetPlayerFromId(source)
@@ -33,7 +41,14 @@ end
 local function GetCharacterData(Player)
     if not Player then return nil end
     
-    if FrameworkName == 'qbcore' then
+    if FrameworkName == 'qbox' then
+        return {
+            firstName = Player.PlayerData.charinfo.firstname,
+            lastName = Player.PlayerData.charinfo.lastname,
+            cid = Player.PlayerData.citizenid,
+            job = Player.PlayerData.job.name
+        }
+    elseif FrameworkName == 'qbcore' then
         return {
             firstName = Player.PlayerData.charinfo.firstname,
             lastName = Player.PlayerData.charinfo.lastname,
@@ -52,7 +67,29 @@ local function GetCharacterData(Player)
     return nil
 end
 
--- Get character data from framework
+-- Server event to get character data (works for all frameworks)
+RegisterServerEvent('courttablet:getCharacterData')
+AddEventHandler('courttablet:getCharacterData', function()
+    local src = source
+    local Player = GetPlayer(src)
+    
+    if Player then
+        local characterData = GetCharacterData(Player)
+        
+        if Config.Debug then
+            print("Server sending character data for " .. FrameworkName .. ":", json.encode(characterData))
+        end
+        
+        TriggerClientEvent('courttablet:receiveCharacterData', src, characterData)
+    else
+        if Config.Debug then
+            print("No player data found for source:", src)
+        end
+        TriggerClientEvent('courttablet:receiveCharacterData', src, {error = "No player data found"})
+    end
+end)
+
+-- Framework-specific callbacks (only for QBCore and ESX)
 if FrameworkName == 'qbcore' then
     Framework.Functions.CreateCallback('courttablet:getCharacterData', function(source, cb)
         local src = source
@@ -62,13 +99,13 @@ if FrameworkName == 'qbcore' then
             local characterData = GetCharacterData(Player)
             
             if Config.Debug then
-                print("Server sending character data:", json.encode(characterData))
+                print("Server sending QBCore character data:", json.encode(characterData))
             end
             
             cb(characterData)
         else
             if Config.Debug then
-                print("No player data found for source:", src)
+                print("No QBCore player data found for source:", src)
             end
             cb({error = "No player data found"})
         end
@@ -82,13 +119,13 @@ elseif FrameworkName == 'esx' then
             local characterData = GetCharacterData(Player)
             
             if Config.Debug then
-                print("Server sending character data:", json.encode(characterData))
+                print("Server sending ESX character data:", json.encode(characterData))
             end
             
             cb(characterData)
         else
             if Config.Debug then
-                print("No player data found for source:", src)
+                print("No ESX player data found for source:", src)
             end
             cb({error = "No player data found"})
         end
@@ -106,7 +143,11 @@ AddEventHandler('courttablet:getCharacterDataFromDB', function()
         local tableName = nil
         local columnName = nil
         
-        if FrameworkName == 'qbcore' then
+        if FrameworkName == 'qbox' then
+            identifier = Player.PlayerData.citizenid
+            tableName = 'players'
+            columnName = 'citizenid'
+        elseif FrameworkName == 'qbcore' then
             identifier = Player.PlayerData.citizenid
             tableName = 'players'
             columnName = 'citizenid'
@@ -125,7 +166,7 @@ AddEventHandler('courttablet:getCharacterDataFromDB', function()
                 if result[1] then
                     local characterData = nil
                     
-                    if FrameworkName == 'qbcore' then
+                    if FrameworkName == 'qbox' or FrameworkName == 'qbcore' then
                         local charinfo = json.decode(result[1].charinfo)
                         if charinfo and charinfo.firstname and charinfo.lastname then
                             characterData = {
@@ -166,7 +207,9 @@ RegisterServerEvent('courttablet:notify')
 AddEventHandler('courttablet:notify', function(message, type)
     local src = source
     
-    if FrameworkName == 'qbcore' then
+    if FrameworkName == 'qbox' then
+        TriggerClientEvent('qbx_core:notify', src, message, type)
+    elseif FrameworkName == 'qbcore' then
         TriggerClientEvent('QBCore:Notify', src, message, type)
     elseif FrameworkName == 'esx' then
         TriggerClientEvent('esx:showNotification', src, message)
@@ -175,7 +218,7 @@ end)
 
 -- Debug info
 if Config.Debug then
-    print("^2[sd-tablet]^7 Framework detected: " .. (FrameworkName or "None"))
+    print("^2[sd-tablet]^7 Server framework detected: " .. (FrameworkName or "None"))
     if not Framework then
         print("^1[sd-tablet]^7 ERROR: No supported framework found!")
     end

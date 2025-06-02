@@ -1,6 +1,7 @@
 -- Framework detection
 local Framework = nil
 local FrameworkName = nil
+
 --Tablet
 local isTabletOpen = false
 local characterData = nil

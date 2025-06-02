@@ -3,9 +3,8 @@ local Framework = nil
 local FrameworkName = nil
 
 -- Auto-detect framework
-if Config.Framework == 'auto' then
-    if GetResourceState('qbox-core') == 'started' or GetResourceState('qbx_core') == 'started' then
-        Framework = exports.qbx_core
+    if Config.Framework == 'qbox' then
+        Framework = exports['qbx_core']:GetCoreObject()
         FrameworkName = 'qbox'
     elseif GetResourceState('qb-core') == 'started' then
         Framework = exports['qb-core']:GetCoreObject()
@@ -14,16 +13,6 @@ if Config.Framework == 'auto' then
         Framework = exports['es_extended']:getSharedObject()
         FrameworkName = 'esx'
     end
-elseif Config.Framework == 'qbox' then
-    Framework = exports.qbx_core
-    FrameworkName = 'qbox'
-elseif Config.Framework == 'qbcore' then
-    Framework = exports['qb-core']:GetCoreObject()
-    FrameworkName = 'qbcore'
-elseif Config.Framework == 'esx' then
-    Framework = exports['es_extended']:getSharedObject()
-    FrameworkName = 'esx'
-end
 
 -- Framework-specific player getter
 local function GetPlayer(source)
@@ -69,7 +58,7 @@ end
 
 -- Get character data from framework
 if FrameworkName == 'qbox' then
-    Framework:CreateCallback('courttablet:getCharacterData', function(source, cb)
+    Framework.Functions.CreateCallback('courttablet:getCharacterData', function(source, cb)
         local src = source
         local Player = GetPlayer(src)
         

@@ -1,12 +1,19 @@
 -- Framework detection
 local Framework = nil
 local FrameworkName = nil
+--Tablet
+local isTabletOpen = false
+local characterData = nil
+local tabletProp = nil
+local tabletDict = Config.Animation.dict
+local tabletAnim = Config.Animation.anim
+
 
 -- Auto-detect framework
 Citizen.CreateThread(function()
     if Config.Framework == 'auto' then
         if GetResourceState('qbox-core') == 'started' or GetResourceState('qbx_core') == 'started' then
-            Framework = exports.qbx_core
+            Framework = exports['qbx_core']:GetCoreObject()
             FrameworkName = 'qbox'
         elseif GetResourceState('qb-core') == 'started' then
             Framework = exports['qb-core']:GetCoreObject()
@@ -16,7 +23,7 @@ Citizen.CreateThread(function()
             FrameworkName = 'esx'
         end
     elseif Config.Framework == 'qbox' then
-        Framework = exports.qbx_core
+        Framework = exports['qbx_core']:GetCoreObject()
         FrameworkName = 'qbox'
     elseif Config.Framework == 'qbcore' then
         Framework = exports['qb-core']:GetCoreObject()
@@ -31,12 +38,6 @@ Citizen.CreateThread(function()
     end
 end)
 
-local isTabletOpen = false
-local characterData = nil
-local tabletProp = nil
-local tabletDict = Config.Animation.dict
-local tabletAnim = Config.Animation.anim
-
 -- Get the control ID for the configured key
 local function GetKeyControl()
     return Config.KeyControls[Config.OpenKey] or Config.OpenKeyControl or 168
@@ -45,7 +46,7 @@ end
 -- Framework-specific notification function
 local function ShowNotification(message, type)
     if FrameworkName == 'qbox' then
-        Framework:Notify(message, type or "primary")
+        TriggerEvent('QBCore:Notify'(message, type or "primary"))
     elseif FrameworkName == 'qbcore' then
         Framework.Functions.Notify(message, type or "primary")
     elseif FrameworkName == 'esx' then

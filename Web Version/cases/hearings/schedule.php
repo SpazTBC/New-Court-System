@@ -140,7 +140,7 @@ if (isset($_POST['schedule_hearing'])) {
                                         <div class="card case-card h-100">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h6 class="card-title mb-0">Case #<?php echo htmlspecialchars($case['casenum']); ?></h6>
+                                                    <h6 class="card-title mb-0">Case #<?php echo htmlspecialchars($case['caseid']); ?></h6>
                                                     <span class="badge bg-warning">No Hearing</span>
                                                 </div>
                                                 
@@ -176,7 +176,7 @@ if (isset($_POST['schedule_hearing'])) {
                                                         
                                                         <div class="row g-2">
                                                             <div class="col-12">
-                                                                <h6 class="text-primary mb-2">Schedule Hearing for Case #<?php echo htmlspecialchars($case['casenum']); ?></h6>
+                                                                <h6 class="text-primary mb-2">Schedule Hearing for Case #<?php echo htmlspecialchars($case['caseid']); ?></h6>
                                                             </div>
                                                             
                                                             <div class="col-md-6">

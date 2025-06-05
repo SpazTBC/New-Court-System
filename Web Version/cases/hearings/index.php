@@ -175,7 +175,7 @@ $past_hearings = $past_hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <div class="card <?php echo $card_class; ?> h-100">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <h6 class="card-title mb-0">Case #<?php echo htmlspecialchars($hearing['casenum']); ?></h6>
+                                                    <h6 class="card-title mb-0">Case #<?php echo htmlspecialchars($hearing['caseid']); ?></h6>
                                                     <span class="badge bg-<?php echo $is_today ? 'warning' : ($is_urgent ? 'danger' : 'primary'); ?> status-badge">
                                                         <?php echo ucfirst($hearing['hearing_status']); ?>
                                                     </span>
@@ -263,7 +263,7 @@ $past_hearings = $past_hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <tbody>
                                         <?php foreach ($past_hearings as $hearing): ?>
                                             <tr>
-                                                <td><?php echo htmlspecialchars($hearing['casenum']); ?></td>
+                                                <td><?php echo htmlspecialchars($hearing['caseid']); ?></td>
                                                 <td><?php echo htmlspecialchars($hearing['defendent']); ?></td>
                                                 <td>
                                                     <?php 

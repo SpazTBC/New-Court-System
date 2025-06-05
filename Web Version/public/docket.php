@@ -905,8 +905,8 @@ foreach ($public_hearings as $hearing) {
             // Add click tracking for analytics (optional)
             document.querySelectorAll('.hearing-table tbody tr').forEach(row => {
                 row.addEventListener('click', function() {
-                    const caseNumber = this.querySelector('.case-number').textContent.trim();
-                    console.log(`Case ${caseNumber} row clicked`); // Replace with actual analytics
+                    const caseidber = this.querySelector('.case-number').textContent.trim();
+                    console.log(`Case ${caseidber} row clicked`); // Replace with actual analytics
                 });
             });
 

@@ -46,7 +46,7 @@ if (isset($_POST['submit'])) {
             $params = array_merge($params, [$hearing_date, $courtroom, $hearing_status, $hearing_notes]);
         }
         
-        $sql .= ", updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        $sql .= ", assigned = CURRENT_TIMESTAMP WHERE id = ?";
         $params[] = $id;
 
         $stmt = $conn->prepare($sql);

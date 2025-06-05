@@ -59,6 +59,19 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             text-align: center;
             margin-right: 8px;
         }
+        .hearing-section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0.375rem;
+        }
+        .datetime-input {
+            position: relative;
+        }
+        .datetime-input input[type="datetime-local"] {
+            min-width: 100%;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -138,40 +151,48 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <select class="form-select" id="user" name="user" required>
-                                            <option value="" disabled>Select Assigned User</option>
-                                            <?php foreach($users as $userOption): ?>
-                                                <option value="<?php echo htmlspecialchars($userOption['username']); ?>" 
-                                                        <?php echo ($userOption['username'] === $_SESSION['username']) ? 'selected' : ''; ?>
-                                                        data-job="<?php echo htmlspecialchars($userOption['job']); ?>">
-                                                    <?php 
-                                                    $displayName = !empty($userOption['charactername']) ? $userOption['charactername'] : $userOption['username'];
-                                                    echo htmlspecialchars($displayName . ' - ' . $userOption['job']); 
-                                                    ?>
-                                                </option>
-                                            <?php endforeach; ?>
+                                        <input type="text" class="form-control" id="defendent" name="defendent" placeholder="Enter defendant name" required>
+                                        <label for="defendent"><i class='bx bx-user-x'></i> Name of Defendant</label>
+                                    </div>
+                                </div>
+
+                                <!-- Hearing Information (Optional) -->
+                                <div class="col-12 mb-3">
+                                    <h5 class="text-muted"><i class='bx bx-calendar-event'></i> Hearing Information (Optional)</h5>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="datetime-local" class="form-control" id="hearing_date" name="hearing_date" placeholder="Hearing Date">
+                                        <label for="hearing_date"><i class='bx bx-calendar'></i> Hearing Date & Time</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="courtroom" name="courtroom">
+                                            <option value="">Select Courtroom (Optional)</option>
+                                            <option value="Courtroom A">Courtroom A</option>
+                                            <option value="Courtroom B">Courtroom B</option>
+                                            <option value="Courtroom C">Courtroom C</option>
+                                            <option value="Family Court">Family Court</option>
+                                            <option value="Civil Court">Civil Court</option>
                                         </select>
-                                        <label for="user"><i class='bx bx-user'></i> Assigned User</label>
+                                        <label for="courtroom"><i class='bx bx-building'></i> Courtroom</label>
                                     </div>
                                 </div>
 
                                 <div class="col-12">
                                     <div class="form-floating">
-                                        <input type="text" class="form-control" id="date" name="date" value="<?php echo date('m/d/Y h:i:sA', time()); ?>" readonly>
-                                        <label for="date"><i class='bx bx-calendar'></i> Date Created</label>
+                                        <textarea class="form-control" id="hearing_notes" name="hearing_notes" style="height: 100px" placeholder="Additional notes about the hearing"></textarea>
+                                        <label for="hearing_notes"><i class='bx bx-note'></i> Hearing Notes (Optional)</label>
                                     </div>
                                 </div>
 
-                                <div class="col-12">
-                                    <div class="form-floating">
-                                        <textarea class="form-control" id="details" name="details" style="height: 120px" placeholder="Enter case details..." required></textarea>
-                                        <label for="details"><i class='bx bx-detail'></i> Case Details</label>
-                                    </div>
-                                </div>
-
-                                <!-- Shared Users Section -->
-                                <div class="col-12 mt-4 mb-3">
-                                    <h5 class="text-muted"><i class='bx bx-share'></i> Share Case With (Optional)</h5>
+                                <!-- User Sharing Section -->
+                                <div class="col-12 mb-3">
+                                    <h5 class="text-muted"><i class='bx bx-users'></i> Case Sharing & Judge Assignment</h5>
+                                    <p class="text-muted small">Share this case with other users. If assigning a judge, select a user with "Judge" role.</p>
                                 </div>
 
                                 <div class="col-md-6">
@@ -187,7 +208,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <label for="shared1"><i class='bx bx-user-plus'></i> Share with User 1</label>
+                                        <label for="shared1"><i class='bx bx-user-plus'></i> Share with User 1 (Judge if applicable)</label>
                                     </div>
                                 </div>
 
@@ -242,13 +263,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                 </div>
 
-                                <div class="col-12">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="defendent" name="defendent" placeholder="Enter defendant name" required>
-                                        <label for="defendent"><i class='bx bx-user-x'></i> Name of Defendant</label>
-                                    </div>
-                                </div>
-
                                 <div class="col-12 mt-4">
                                     <button type="submit" name="submit" class="btn btn-primary btn-lg w-100">
                                         <i class='bx bx-save'></i> Create Case File
@@ -266,6 +280,16 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Set minimum date to current date/time for hearing
+        document.addEventListener('DOMContentLoaded', function() {
+            const hearingDateInput = document.getElementById('hearing_date');
+            if (hearingDateInput) {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                hearingDateInput.min = now.toISOString().slice(0, 16);
+            }
+        });
+
         // Form validation
         (function() {
             'use strict'
@@ -281,77 +305,15 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             })
         })()
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Criminal Case
-            document.querySelector('button[name="generate"]').addEventListener('click', function(e) {
-                e.preventDefault();
-                const caseNumber = 'CF-' + Math.floor(Math.random() * 900000) + 100000;
+        // Case number generation (existing functionality)
+        document.querySelectorAll('button[name="generate"], button[name="civil"], button[name="family"]').forEach(button => {
+            button.addEventListener('click', function() {
+                const caseType = this.name === 'generate' ? 'CR' : (this.name === 'civil' ? 'CV' : 'FM');
+                const randomNum = Math.floor(Math.random() * 90000) + 10000;
+                const year = new Date().getFullYear();
+                const caseNumber = `${caseType}-${year}-${randomNum}`;
                 document.getElementById('casenum').value = caseNumber;
-                
-                // Add visual feedback
-                const input = document.getElementById('casenum');
-                input.classList.add('border-danger');
-                setTimeout(() => input.classList.remove('border-danger'), 2000);
             });
-
-            // Civil Case
-            document.querySelector('button[name="civil"]').addEventListener('click', function(e) {
-                e.preventDefault();
-                const caseNumber = 'CV-' + Math.floor(Math.random() * 900000) + 100000;
-                document.getElementById('casenum').value = caseNumber;
-                
-                // Add visual feedback
-                const input = document.getElementById('casenum');
-                input.classList.add('border-info');
-                setTimeout(() => input.classList.remove('border-info'), 2000);
-            });
-
-            // Family Case
-            document.querySelector('button[name="family"]').addEventListener('click', function(e) {
-                e.preventDefault();
-                const caseNumber = 'F-' + Math.floor(Math.random() * 900000) + 100000;
-                document.getElementById('casenum').value = caseNumber;
-                
-                // Add visual feedback
-                const input = document.getElementById('casenum');
-                input.classList.add('border-success');
-                setTimeout(() => input.classList.remove('border-success'), 2000);
-            });
-
-            // Prevent selecting the same user multiple times
-            const userSelects = ['user', 'shared1', 'shared2', 'shared3', 'shared4'];
-            
-            userSelects.forEach(selectId => {
-                document.getElementById(selectId).addEventListener('change', function() {
-                    updateUserOptions();
-                });
-            });
-
-            function updateUserOptions() {
-                const selectedUsers = [];
-                userSelects.forEach(selectId => {
-                    const value = document.getElementById(selectId).value;
-                    if (value) selectedUsers.push(value);
-                });
-
-                userSelects.forEach(selectId => {
-                    const select = document.getElementById(selectId);
-                    const currentValue = select.value;
-                    
-                    Array.from(select.options).forEach(option => {
-                        if (option.value && selectedUsers.includes(option.value) && option.value !== currentValue) {
-                            option.disabled = true;
-                            option.style.color = '#999';
-                        } else {
-                            option.disabled = false;
-                            option.style.color = '';
-                        }
-                    });
-                });
-            }
-
-            // Initial call to set up the options
-            updateUserOptions();
         });
     </script>
 </body>

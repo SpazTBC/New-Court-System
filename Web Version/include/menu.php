@@ -51,7 +51,7 @@
                 <?php
                 // Authenticated User Menu
                 if(isset($_SESSION['username'])) {
-                    // Common menu items for all all users
+                    // Common menu items for all users
                     ?>
                     <li class="nav-item">
                         <a class="nav-link <?php echo (isset($menu) && $menu == "HOME") ? 'active' : ''; ?>" href="/login/home.php">
@@ -65,6 +65,24 @@
                     </li>
                     
                     <?php 
+                    // Add Hearings menu item for non-police users
+                    // Get current user's job to check if they should see hearings
+                    if (!isset($current_user_job)) {
+                        $menu_user_stmt = $conn->prepare("SELECT job FROM users WHERE username = ?");
+                        $menu_user_stmt->execute([$_SESSION['username']]);
+                        $menu_user_data = $menu_user_stmt->fetch(PDO::FETCH_ASSOC);
+                        $current_user_job = strtolower($menu_user_data['job'] ?? '');
+                    }
+                    
+                    // Show Hearings tab for all users except police
+                    ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo (isset($menu) && $menu == "HEARINGS") ? 'active' : ''; ?>" href="/cases/hearings/index.php">
+                            <i class="bx bx-calendar-event"></i> Hearings
+                        </a>
+                    </li>
+                    <?php 
+                    
                     // Attorney-specific menu items
                     // Only show attorney menu items if the user is an attorney AND their job is approved
                     if(isset($isAttorney) && $isAttorney === true && isset($user['job_approved']) && $user['job_approved'] == 1): 

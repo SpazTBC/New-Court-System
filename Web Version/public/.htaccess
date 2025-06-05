@@ -1,0 +1,25 @@
+RewriteEngine On
+
+# Pretty URLs for docket
+RewriteRule ^docket/?$ docket.php [L]
+RewriteRule ^court-schedule/?$ docket.php [L]
+RewriteRule ^schedule/?$ docket.php [L]
+
+# API routes
+RewriteRule ^api/docket/?$ api/docket.php [L]
+
+# Security - prevent access to sensitive files
+<Files "*.inc">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+</IfModule>

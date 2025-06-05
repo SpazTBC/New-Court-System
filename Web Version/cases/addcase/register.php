@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <link rel="stylesheet" href="../../css/main.css">
@@ -18,114 +19,89 @@
             <div class="col-md-8 offset-md-2">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h4>Add New Case</h4>
+                        <h4>Case Registration Result</h4>
                     </div>
                     <div class="card-body">
                         <?php
                         session_start();
-                        $menu = "CASE";
-                        include('../../include/database.php');
+                        include("../../include/connection.php");
 
-                        if(isset($_POST['submit']))
-                        {
-                            $casenum = $_POST['casenum'];
-                            $user = $_SESSION['username'];
-                            $username2 = $_SESSION['username'];
-                            $date = $_POST['date'];
-                            $details = $_POST['details'];
-                            $shared1 = $_POST['shared1'] ?? '';
-                            $shared2 = $_POST['shared2'] ?? '';
-                            $shared3 = $_POST['shared3'] ?? '';
-                            $shared4 = $_POST['shared4'] ?? '';
-                            $defendent = $_POST['defendent'];
-                            
-                            if(strpos($casenum, 'CF') !== false) {
-                                $type = 'CRIMINAL';
-                            } elseif(strpos($casenum, 'CV') !== false) {
-                                $type = 'CIVIL';
-                            } elseif(strpos($casenum, 'F') !== false) {
-                                $type = 'FAMILY';
-                            } else {
-                                $type = 'UNKNOWN';
-                            }
+                        if (!isset($_SESSION['username'])) {
+                            header("Location: ../../login.php");
+                            exit();
+                        }
 
-                            $query = "INSERT INTO cases (caseid,assigneduser,assigned,details,shared01,shared02,shared03,shared04,type,defendent) 
-                            VALUES (:caseid,:assigneduser,:assigned,:details,:shared01,:shared02,:shared03,:shared04,:type,:defendant)";
-                            $query_run = $conn->prepare($query);
+                        if (isset($_POST['submit'])) {
+                            try {
+                                // Get form data
+                                $casenum = $_POST['casenum'];
+                                $defendent = $_POST['defendent'];
+                                $hearing_date = $_POST['hearing_date'];
+                                $courtroom = $_POST['courtroom'];
+                                $hearing_notes = $_POST['hearing_notes'] ?? '';
+                                $shared1 = $_POST['shared1'] ?? '';
+                                $shared2 = $_POST['shared2'] ?? '';
+                                $shared3 = $_POST['shared3'] ?? '';
+                                $shared4 = $_POST['shared4'] ?? '';
+                                $creator = $_SESSION['username'];
 
-                            $data = [
-                                ':caseid' => $casenum,
-                                ':assigneduser' => $user,
-                                ':assigned' => $date,
-                                ':details' => $details,
-                                ':shared01' => $shared1,
-                                ':shared02' => $shared2,
-                                ':shared03' => $shared3,
-                                ':shared04' => $shared4,
-                                ':type' => $type,
-                                ':defendant' => $defendent,
-                            ];
-                            $query_execute = $query_run->execute($data);
+                                // Insert case with hearing information
+                                $stmt = $conn->prepare("INSERT INTO cases (casenum, defendent, hearing_date, courtroom, hearing_notes, hearing_status, shared1, shared2, shared3, shared4, creator, created_at) VALUES (?, ?, ?, ?, ?, 'scheduled', ?, ?, ?, ?, ?, NOW())");
+                                
+                                $stmt->execute([
+                                    $casenum,
+                                    $defendent,
+                                    $hearing_date,
+                                    $courtroom,
+                                    $hearing_notes,
+                                    $shared1,
+                                    $shared2,
+                                    $shared3,
+                                    $shared4,
+                                    $creator
+                                ]);
 
-                            if($query_execute)
-                            {
-                                echo '<div class="alert alert-success">Case added successfully! <a href="../index.php" class="btn btn-sm btn-primary">Return to Home</a></div>';
-                            }
-                            else
-                            {
-                                echo '<div class="alert alert-danger">Failed to add case. Please try again.</div>';
+                                // Get the case ID for notifications
+                                $case_id = $conn->lastInsertId();
+
+                                // Send notifications to shared users (excluding police)
+                                $shared_users = array_filter([$shared1, $shared2, $shared3, $shared4]);
+                                
+                                foreach ($shared_users as $username) {
+                                    if (!empty($username)) {
+                                        // Check if user is not police
+                                        $user_check = $conn->prepare("SELECT job FROM users WHERE username = ?");
+                                        $user_check->execute([$username]);
+                                        $user_data = $user_check->fetch(PDO::FETCH_ASSOC);
+                                        
+                                        if ($user_data && strtolower($user_data['job']) !== 'police') {
+                                            // Create notification for hearing
+                                            $notification_stmt = $conn->prepare("INSERT INTO notifications (username, message, type, case_id, created_at) VALUES (?, ?, 'hearing', ?, NOW())");
+                                            $message = "You have been assigned to case #{$casenum} with a hearing scheduled for " . date('M j, Y g:i A', strtotime($hearing_date)) . " in {$courtroom}";
+                                            $notification_stmt->execute([$username, $message, $case_id]);
+                                        }
+                                    }
+                                }
+
+                                header("Location: ../index.php?success=case_created");
+                                exit();
+
+                            } catch (PDOException $e) {
+                                $error = "Error creating case: " . $e->getMessage();
                             }
                         }
                         ?>
 
-                        <!-- Case Registration Form -->
-                        <?php if(!isset($_POST['submit']) || !$query_execute): ?>
-                        <form method="POST" action="">
-                            <div class="mb-3">
-                                <label for="casenum" class="form-label">Case Number</label>
-                                <input type="text" class="form-control" id="casenum" name="casenum" required 
-                                       placeholder="Format: CF for Criminal, CV for Civil, F for Family">
-                                <small class="text-muted">Example: CF12345, CV54321, F98765</small>
+                        <?php if (isset($error)): ?>
+                            <div class="alert alert-danger">
+                                <i class='bx bx-error'></i> <?php echo htmlspecialchars($error); ?>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="date" class="form-label">Date Assigned</label>
-                                <input type="date" class="form-control" id="date" name="date" required>
+                            <a href="index.php" class="btn btn-secondary">Go Back</a>
+                        <?php else: ?>
+                            <div class="alert alert-success">
+                                <i class='bx bx-check'></i> Case created successfully with hearing scheduled!
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="defendent" class="form-label">Defendant Name</label>
-                                <input type="text" class="form-control" id="defendent" name="defendent" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="details" class="form-label">Case Details</label>
-                                <textarea class="form-control" id="details" name="details" rows="4" required></textarea>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Shared With</label>
-                                <div class="row">
-                                    <div class="col-md-6 mb-2">
-                                        <input type="text" class="form-control" name="shared1" placeholder="User 1">
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <input type="text" class="form-control" name="shared2" placeholder="User 2">
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <input type="text" class="form-control" name="shared3" placeholder="User 3">
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <input type="text" class="form-control" name="shared4" placeholder="User 4">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-grid gap-2">
-                                <button type="submit" name="submit" class="btn btn-primary">Register Case</button>
-                                <a href="../index.php" class="btn btn-secondary">Cancel</a>
-                            </div>
-                        </form>
+                            <a href="../index.php" class="btn btn-primary">View Cases</a>
                         <?php endif; ?>
                     </div>
                 </div>

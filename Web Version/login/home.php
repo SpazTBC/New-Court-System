@@ -25,6 +25,8 @@ $isAttorney = ($user['job'] === "Attorney" && $user['job_approved'] == 1);
     <title>Home Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <link href="../../css/dark-mode.css" rel="stylesheet">
+    <script src="../../js/dark-mode.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -154,7 +156,6 @@ $isAttorney = ($user['job'] === "Attorney" && $user['job_approved'] == 1);
     </div>
 
     <?php include("../include/footer.php"); ?>
-    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

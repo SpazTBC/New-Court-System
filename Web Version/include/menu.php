@@ -227,6 +227,14 @@
                     }
                 }
                 ?>
+                <!-- Add this before the closing </ul> in the navbar -->
+<?php if(isset($_SESSION['username'])): ?>
+<li class="nav-item">
+    <button class="nav-link btn btn-link" id="navbarDarkModeToggle" style="border: none; background: none;">
+        <i class="bx bx-moon"></i> <span class="d-none d-md-inline">Dark Mode</span>
+    </button>
+</li>
+<?php endif; ?>
             </ul>        </div>
     </div>
 </nav>
@@ -253,5 +261,40 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.getElementById('navbarDarkModeToggle');
+    if (navToggle) {
+        navToggle.addEventListener('click', function() {
+            // Trigger the main dark mode toggle
+            const mainToggle = document.getElementById('darkModeToggle');
+            if (mainToggle) {
+                mainToggle.click();
+            }
+        });
+        
+        // Update navbar toggle icon when theme changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    const theme = document.documentElement.getAttribute('data-theme');
+                    const icon = navToggle.querySelector('i');
+                    if (theme === 'dark') {
+                        icon.className = 'bx bx-sun';
+                    } else {
+                        icon.className = 'bx bx-moon';
+                    }
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+    }
 });
 </script>

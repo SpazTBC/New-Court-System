@@ -62,6 +62,8 @@ $past_hearings = $past_hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Court Hearing Schedule</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <link href="../../css/dark-mode.css" rel="stylesheet">
+    <script src="../../js/dark-mode.js"></script>
     <style>
         .hearing-card {
             transition: transform 0.2s ease-in-out;
@@ -219,7 +221,7 @@ $past_hearings = $past_hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 <?php endif; ?>
                                                 
                                                 <div class="mt-3">
-                                                    <a href="../view_case.php?id=<?php echo $hearing['id']; ?>" class="btn btn-sm btn-outline-primary">
+                                                    <a href="../view.php?id=<?php echo $hearing['id']; ?>" class="btn btn-sm btn-outline-primary">
                                                         <i class='bx bx-eye'></i> View Case
                                                     </a>
                                                     <a href="edit_hearing.php?id=<?php echo $hearing['id']; ?>" class="btn btn-sm btn-outline-secondary">
@@ -279,7 +281,7 @@ $past_hearings = $past_hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <a href="../view_case.php?id=<?php echo $hearing['id']; ?>" class="btn btn-sm btn-outline-primary">
+                                                    <a href="../view.php?id=<?php echo $hearing['id']; ?>" class="btn btn-sm btn-outline-primary">
                                                         <i class='bx bx-eye'></i> View
                                                     </a>
                                                 </td>

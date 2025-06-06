@@ -156,9 +156,51 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                 </div>
 
+                                <!-- Case Details Section -->
+                                <div class="col-12 mb-3 mt-4">
+                                    <h5 class="text-muted"><i class='bx bx-file-text'></i> Case Details</h5>
+                                    <p class="text-muted small">Provide detailed information about the case, charges, evidence, and other relevant details.</p>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="case_details" name="case_details" style="height: 150px" placeholder="Enter detailed case information, charges, evidence, witness information, etc." required></textarea>
+                                        <label for="case_details"><i class='bx bx-file-text'></i> Case Details & Information</label>
+                                        <div class="form-text">Include charges, evidence, witness information, case background, and any other relevant details.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Case Type and Status -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="case_type" name="case_type" required>
+                                            <option value="">Select Case Type</option>
+                                            <option value="Criminal">Criminal</option>
+                                            <option value="Civil">Civil</option>
+                                            <option value="Family">Family</option>
+                                            <option value="Traffic">Traffic</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <label for="case_type"><i class='bx bx-category'></i> Case Type</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="case_status" name="case_status">
+                                            <option value="Open">Open</option>
+                                            <option value="Under Investigation">Under Investigation</option>
+                                            <option value="Pending Review">Pending Review</option>
+                                            <option value="Closed">Closed</option>
+                                        </select>
+                                        <label for="case_status"><i class='bx bx-flag'></i> Case Status</label>
+                                    </div>
+                                </div>
+
                                 <!-- Hearing Information (Optional) -->
-                                <div class="col-12 mb-3">
+                                <div class="col-12 mb-3 mt-4">
                                     <h5 class="text-muted"><i class='bx bx-calendar-event'></i> Hearing Information (Optional)</h5>
+                                    <p class="text-muted small">Schedule a court hearing for this case if needed.</p>
                                 </div>
 
                                 <div class="col-md-6">
@@ -184,13 +226,14 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                 <div class="col-12">
                                     <div class="form-floating">
-                                        <textarea class="form-control" id="hearing_notes" name="hearing_notes" style="height: 100px" placeholder="Additional notes about the hearing"></textarea>
+                                        <textarea class="form-control" id="hearing_notes" name="hearing_notes" style="height: 100px" placeholder="Additional notes about the hearing, scheduling preferences, special requirements, etc."></textarea>
                                         <label for="hearing_notes"><i class='bx bx-note'></i> Hearing Notes (Optional)</label>
+                                        <div class="form-text">Notes specific to the hearing scheduling, courtroom requirements, or special instructions.</div>
                                     </div>
                                 </div>
 
                                 <!-- User Sharing Section -->
-                                <div class="col-12 mb-3">
+                                <div class="col-12 mb-3 mt-4">
                                     <h5 class="text-muted"><i class='bx bx-users'></i> Case Sharing & Judge Assignment</h5>
                                     <p class="text-muted small">Share this case with other users. If assigning a judge, select a user with "Judge" role.</p>
                                 </div>

@@ -24,7 +24,7 @@
                     <div class="card-body">
                         <?php
                         session_start();
-                        include("../../include/connection.php");
+                        include("../../include/database.php");
 
                         if (!isset($_SESSION['username'])) {
                             header("Location: ../../login.php");
@@ -36,29 +36,36 @@
                                 // Get form data
                                 $casenum = $_POST['casenum'];
                                 $defendent = $_POST['defendent'];
-                                $hearing_date = $_POST['hearing_date'];
-                                $courtroom = $_POST['courtroom'];
-                                $hearing_notes = $_POST['hearing_notes'] ?? '';
-                                $shared1 = $_POST['shared1'] ?? '';
-                                $shared2 = $_POST['shared2'] ?? '';
-                                $shared3 = $_POST['shared3'] ?? '';
-                                $shared4 = $_POST['shared4'] ?? '';
+                                $case_details = $_POST['case_details']; // New field
+                                $case_type = $_POST['case_type']; // New field
+                                $case_status = $_POST['case_status'] ?? 'Open'; // New field
                                 $creator = $_SESSION['username'];
+                                
+                                // Hearing information
+                                $hearing_date = !empty($_POST['hearing_date']) ? $_POST['hearing_date'] : null;
+                                $courtroom = !empty($_POST['courtroom']) ? $_POST['courtroom'] : null;
+                                $hearing_notes = !empty($_POST['hearing_notes']) ? $_POST['hearing_notes'] : null;
+                                $hearing_status = !empty($hearing_date) ? 'scheduled' : null;
+                                
+                                // Shared users
+                                $shared1 = !empty($_POST['shared1']) ? $_POST['shared1'] : null;
+                                $shared2 = !empty($_POST['shared2']) ? $_POST['shared2'] : null;
+                                $shared3 = !empty($_POST['shared3']) ? $_POST['shared3'] : null;
+                                $shared4 = !empty($_POST['shared4']) ? $_POST['shared4'] : null;
 
-                                // Insert case with hearing information
-                                $stmt = $conn->prepare("INSERT INTO cases (casenum, defendent, hearing_date, courtroom, hearing_notes, hearing_status, shared1, shared2, shared3, shared4, creator, created_at) VALUES (?, ?, ?, ?, ?, 'scheduled', ?, ?, ?, ?, ?, NOW())");
+                                // Insert the case with all the new fields
+                                $stmt = $conn->prepare("
+                                    INSERT INTO cases (
+                                        casenum, defendent, details, type, status, creator, 
+                                        hearing_date, courtroom, hearing_notes, hearing_status,
+                                        shared1, shared2, shared3, shared4, created_at
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                                ");
                                 
                                 $stmt->execute([
-                                    $casenum,
-                                    $defendent,
-                                    $hearing_date,
-                                    $courtroom,
-                                    $hearing_notes,
-                                    $shared1,
-                                    $shared2,
-                                    $shared3,
-                                    $shared4,
-                                    $creator
+                                    $casenum, $defendent, $case_details, $case_type, $case_status, $creator,
+                                    $hearing_date, $courtroom, $hearing_notes, $hearing_status,
+                                    $shared1, $shared2, $shared3, $shared4
                                 ]);
 
                                 // Get the case ID for notifications

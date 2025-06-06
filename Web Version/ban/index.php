@@ -32,20 +32,29 @@ if (isset($_POST['submit'])) {
     if (!$user_exists) {
         $error_message = "User not found!";
     } else {
-        // Process ban/unban
-        if (isset($_POST['ban'])) {
+        // Process ban/unban ONLY if ban field is set
+        if (isset($_POST['ban']) && $_POST['ban'] !== '') {
             $ban_value = $_POST['ban'];
             $update_stmt = $conn->prepare("UPDATE users SET banned = ? WHERE username = ?");
             $update_stmt->execute([$ban_value, $username]);
             $success_message = "User ban status updated successfully!";
         }
         
-        // Process role change
+        // Process role change ONLY if role field is set and not empty
         if (isset($_POST['role']) && !empty($_POST['role'])) {
             $new_role = $_POST['role'];
-            $update_stmt = $conn->prepare("UPDATE users SET job = ? WHERE username = ?");
-            $update_stmt->execute([$new_role, $username]);
-            $success_message = isset($success_message) ? $success_message . " User role updated successfully!" : "User role updated successfully!";
+            
+            // Handle custom role
+            if ($new_role === 'custom' && isset($_POST['customRole']) && !empty($_POST['customRole'])) {
+                $new_role = $_POST['customRole'];
+            }
+            
+            // Only update if it's not the custom placeholder
+            if ($new_role !== 'custom') {
+                $update_stmt = $conn->prepare("UPDATE users SET job = ? WHERE username = ?");
+                $update_stmt->execute([$new_role, $username]);
+                $success_message = isset($success_message) ? $success_message . " User role updated successfully!" : "User role updated successfully!";
+            }
         }
         
         // Process account deletion
@@ -695,96 +704,107 @@ try {
                 });
             }
             
-            // Show active tab based on URL hash
-            let hash = window.location.hash;
-            if (hash) {
-                $('.nav-tabs a[href="' + hash + '"]').tab('show');
-            }
-            
-            // Update URL hash when tab changes
-            $('.nav-tabs a').on('shown.bs.tab', function(e) {
-                window.location.hash = e.target.hash;
-            });
-        });
-        
-        // Show/hide custom role input
-        document.getElementById('role').addEventListener('change', function() {
-            if (this.value === 'custom') {
-                document.getElementById('customRoleInput').style.display = 'block';
-            } else {
-                document.getElementById('customRoleInput').style.display = 'none';
-            }
-        });
-        
-        // Function to handle ban toggle from the table
-        function toggleBan(username, currentStatus) {
-            document.getElementById('username').value = username;
-            document.getElementById('ban-tab').click();
-            document.getElementById('ban').value = currentStatus ? '0' : '1';
-            
-            // Scroll to the form
-            document.querySelector('.card-header:contains("User Actions")').scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
-        
-        // Function to handle role change from the table
-        function changeRole(username) {
-            document.getElementById('username').value = username;
-            document.getElementById('role-tab').click();
-            
-            // Scroll to the form
-            document.querySelector('.card-header:contains("User Actions")').scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
-        
-        // Function to handle delete confirmation from the table
-        function confirmDelete(username) {
-            if (confirm('Are you sure you want to delete the user "' + username + '"? This action cannot be undone.')) {
+            // Function to handle ban toggle from the table
+            function toggleBan(username, currentStatus) {
                 document.getElementById('username').value = username;
-                document.getElementById('delete-tab').click();
-                document.getElementById('delete').checked = true;
-                document.querySelector('form').submit();
-            }
-        }
-        
-        // Form validation
-        document.querySelector('form').addEventListener('submit', function(event) {
-            const activeTab = document.querySelector('.tab-pane.active');
-            const username = document.getElementById('username').value.trim();
-            
-            if (!username) {
-                alert('Please enter a username');
-                event.preventDefault();
-                return;
+                document.getElementById('ban-tab').click();
+                document.getElementById('ban').value = currentStatus ? '0' : '1';
+                
+                // Clear other form fields to prevent conflicts
+                document.getElementById('role').value = '';
+                document.getElementById('delete').checked = false;
+                document.getElementById('customRoleInput').style.display = 'none';
+                
+                // Scroll to the form
+                document.querySelector('.card-header').scrollIntoView({
+                    behavior: 'smooth'
+                });
             }
             
-            if (activeTab.id === 'role-content') {
-                const roleSelect = document.getElementById('role');
-                if (roleSelect.value === '') {
-                    alert('Please select a role');
+            // Function to handle role change from the table
+            function changeRole(username) {
+                document.getElementById('username').value = username;
+                document.getElementById('role-tab').click();
+                
+                // Clear other form fields to prevent conflicts
+                document.getElementById('ban').value = '';
+                document.getElementById('delete').checked = false;
+                
+                // Scroll to the form
+                document.querySelector('.card-header').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Function to handle delete confirmation from the table
+            function confirmDelete(username) {
+                if (confirm('Are you sure you want to delete the user "' + username + '"? This action cannot be undone.')) {
+                    document.getElementById('username').value = username;
+                    document.getElementById('delete-tab').click();
+                    document.getElementById('delete').checked = true;
+                    
+                    // Clear other form fields to prevent conflicts
+                    document.getElementById('ban').value = '';
+                    document.getElementById('role').value = '';
+                    document.getElementById('customRoleInput').style.display = 'none';
+                    
+                    document.querySelector('form').submit();
+                }
+            }
+            
+            // Show/hide custom role input
+            document.getElementById('role').addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    document.getElementById('customRoleInput').style.display = 'block';
+                    document.getElementById('customRole').focus();
+                } else {
+                    document.getElementById('customRoleInput').style.display = 'none';
+                }
+            });
+            
+            // Form validation
+            document.querySelector('form').addEventListener('submit', function(event) {
+                const activeTab = document.querySelector('.tab-pane.active');
+                const username = document.getElementById('username').value.trim();
+                
+                if (!username) {
+                    alert('Please enter a username');
                     event.preventDefault();
                     return;
                 }
                 
-                if (roleSelect.value === 'custom') {
-                    const customRole = document.getElementById('customRole').value.trim();
-                    if (customRole === '') {
-                        alert('Please enter a custom role name');
+                if (activeTab.id === 'role-content') {
+                    const roleSelect = document.getElementById('role');
+                    if (roleSelect.value === '') {
+                        alert('Please select a role');
                         event.preventDefault();
                         return;
                     }
-                    // Set the role value to the custom role input
-                    roleSelect.value = customRole;
+                    
+                    if (roleSelect.value === 'custom') {
+                        const customRole = document.getElementById('customRole').value.trim();
+                        if (customRole === '') {
+                            alert('Please enter a custom role name');
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                    
+                    // Clear ban field when submitting role change
+                    document.getElementById('ban').value = '';
                 }
-            }
-            
-            if (activeTab.id === 'delete-content' && !document.getElementById('delete').checked) {
-                alert('Please confirm the deletion by checking the confirmation box');
-                event.preventDefault();
-                return;
-            }
+                
+                if (activeTab.id === 'ban-content') {
+                    // Clear role field when submitting ban action
+                    document.getElementById('role').value = '';
+                }
+                
+                if (activeTab.id === 'delete-content' && !document.getElementById('delete').checked) {
+                    alert('Please confirm the deletion by checking the confirmation box');
+                    event.preventDefault();
+                    return;
+                }
+            });
         });
     </script>
 </body>

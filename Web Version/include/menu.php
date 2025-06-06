@@ -14,8 +14,10 @@
         </span>
         
         <?php
-        // Security Configuration
-        header_remove('x-powered-by');
+        // Security Configuration - Only if headers haven't been sent
+        if (!headers_sent()) {
+            header_remove('x-powered-by');
+        }
         error_reporting(0);
 
         // Database Connection

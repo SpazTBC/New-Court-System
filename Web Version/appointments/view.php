@@ -80,6 +80,8 @@ if (isset($_POST['update_status']) && $is_assistant) {
     <title>Appointment Details - Blackwood & Associates</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <link href="../css/dark-mode.css" rel="stylesheet">
+    <script src="../js/dark-mode.js"></script>
     <style>
         .appointment-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

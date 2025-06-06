@@ -71,6 +71,8 @@ foreach ($appointments as $appointment) {
     <title><?php echo $is_attorney ? 'My Appointment Calendar' : 'Appointment Calendar'; ?> - Blackwood & Associates</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <link href="../css/dark-mode.css" rel="stylesheet">
+    <script src="../js/dark-mode.js"></script>
     <style>
         .calendar-container {
             background: white;
@@ -101,6 +103,7 @@ foreach ($appointments as $appointment) {
         .day-number {
             font-weight: 600;
             margin-bottom: 0.25rem;
+            color: #333;
         }
         .appointment-item {
             background: #007bff;
@@ -136,6 +139,75 @@ foreach ($appointments as $appointment) {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
+        }
+        .calendar-header h4 {
+            color: #333;
+            margin: 0;
+        }
+
+        /* Dark Mode Styles */
+        [data-theme="dark"] .calendar-container {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+        }
+        
+        [data-theme="dark"] .calendar-grid {
+            background-color: #404040;
+            border-color: #404040;
+        }
+        
+        [data-theme="dark"] .calendar-day {
+            background: #1a1a1a;
+            border-color: #404040;
+        }
+        
+        [data-theme="dark"] .calendar-day.other-month {
+            background-color: #2d2d2d;
+            color: #6c757d;
+        }
+        
+        [data-theme="dark"] .calendar-day.today {
+            background-color: #1e3a5f;
+        }
+        
+        [data-theme="dark"] .day-number {
+            color: #ffffff !important;
+        }
+        
+        [data-theme="dark"] .calendar-header h4 {
+            color: #ffffff !important;
+        }
+        
+        [data-theme="dark"] .weekday-header {
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #404040;
+        }
+        
+        [data-theme="dark"] .card {
+            background-color: #2d2d2d;
+            border-color: #404040;
+            color: #ffffff;
+        }
+        
+        [data-theme="dark"] .card-body {
+            color: #ffffff;
+        }
+        
+        [data-theme="dark"] .card-header {
+            background-color: #1a1a1a !important;
+            border-color: #404040;
+            color: #ffffff;
+        }
+        
+        /* Appointment items remain the same in dark mode for visibility */
+        [data-theme="dark"] .appointment-item {
+            color: white; /* Ensure text stays white */
+        }
+        
+        /* Legend items in dark mode */
+        [data-theme="dark"] .appointment-item.legend-item {
+            color: white !important;
         }
     </style>
 </head>

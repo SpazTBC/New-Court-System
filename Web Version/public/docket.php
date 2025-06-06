@@ -46,421 +46,746 @@ foreach ($public_hearings as $hearing) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="../css/dark-mode.css" rel="stylesheet">
+    <script src="../js/dark-mode.js"></script>
     <style>
-        :root {
-            --la-blue: #003f7f;
-            --la-gold: #ffb81c;
-            --la-dark-blue: #002a5c;
-            --la-light-blue: #e6f2ff;
-            --la-gray: #6c757d;
-            --shadow-light: 0 2px 15px rgba(0, 63, 127, 0.08);
-            --shadow-medium: 0 4px 25px rgba(0, 63, 127, 0.12);
-            --shadow-heavy: 0 8px 40px rgba(0, 63, 127, 0.15);
-        }
+    :root {
+        --primary-blue: #1e40af;
+        --primary-gold: #f59e0b;
+        --dark-blue: #1e3a8a;
+        --light-blue: #eff6ff;
+        --text-gray: #64748b;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    }
 
-        * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
+    * {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
 
-        body {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+    }
 
-        .court-header {
-            background: linear-gradient(135deg, var(--la-blue) 0%, var(--la-dark-blue) 100%);
-            color: white;
-            padding: 3rem 0;
-            position: relative;
-            overflow: hidden;
-        }
+    /* Modern Header Design */
+    .docket-header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+        color: white;
+        padding: 3rem 0;
+        position: relative;
+        overflow: hidden;
+    }
 
-        .court-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            opacity: 0.3;
-        }
+    .docket-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    }
 
-        .court-header .container {
-            position: relative;
-            z-index: 2;
-        }
+    .docket-header .container {
+        position: relative;
+        z-index: 2;
+    }
 
-        .court-seal {
-            width: 80px;
-            height: 80px;
-            background: var(--la-gold);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: var(--la-dark-blue);
-            font-weight: bold;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 20px rgba(255, 184, 28, 0.3);
-        }
+    .court-badge {
+        background: var(--primary-gold);
+        color: var(--dark-blue);
+        padding: 1rem;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 1rem;
+    }
 
+    .court-title {
+        font-size: 2.75rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .court-subtitle {
+        font-size: 1.25rem;
+        font-weight: 500;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+
+    .last-updated {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        font-weight: 400;
+    }
+
+    /* Stats Card */
+    .stats-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: var(--shadow-xl);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stats-number {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+
+    .stats-label {
+        font-size: 0.9rem;
+        color: var(--text-gray);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Search Section */
+    .search-box {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: var(--shadow-xl);
+        padding: 2rem;
+        margin-top: -3rem;
+        position: relative;
+        z-index: 10;
+        border: 1px solid var(--border-color);
+    }
+
+    .search-title {
+        color: var(--dark-blue);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        font-size: 1.25rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid var(--border-color);
+        border-radius: 1rem;
+        padding: 0.875rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .input-group-text {
+        background: var(--light-blue);
+        border: 2px solid var(--border-color);
+        border-right: none;
+        color: var(--primary-blue);
+        border-radius: 1rem 0 0 1rem;
+        font-size: 1.1rem;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 1px solid #f59e0b;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .disclaimer::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary-gold);
+    }
+
+    .disclaimer h6 {
+        color: #92400e;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+    }
+
+    .disclaimer p {
+        color: #92400e;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    /* Modern Cards */
+    .modern-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-xl);
+        transform: translateY(-2px);
+    }
+
+    .card-header-modern {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border: none;
+        position: relative;
+    }
+
+    .card-header-modern.secondary {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    }
+
+    .card-header-modern h5 {
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.25rem;
+    }
+
+    /* Modern Table */
+    .modern-table {
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .modern-table thead th {
+        background: var(--light-blue);
+        color: var(--dark-blue);
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1.25rem 1.5rem;
+        border: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .modern-table tbody tr {
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .modern-table tbody tr:hover {
+        background: linear-gradient(90deg, #f8fafc 0%, #ffffff 100%);
+        border-left-color: var(--primary-blue);
+        transform: translateX(3px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .modern-table tbody tr.today {
+        border-left-color: var(--primary-gold);
+        background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+    }
+
+    .modern-table tbody tr.completed {
+        border-left-color: #10b981;
+        opacity: 0.85;
+    }
+
+    .modern-table tbody td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-top: none;
+    }
+
+    /* Content Styling */
+    .case-number {
+        font-weight: 800;
+        color: var(--dark-blue);
+        font-size: 1rem;
+    }
+
+    .defendant-name {
+        font-weight: 600;
+        color: #111827 !important; /* Very dark gray */
+        font-size: 0.95rem;
+        font-weight: 700 !important;
+    }
+
+    .hearing-date {
+        font-weight: 700;
+        color: var(--primary-blue);
+        font-size: 0.95rem;
+    }
+
+    .hearing-time {
+        font-size: 0.8rem;
+        color: var(--text-gray);
+        font-weight: 500;
+    }
+
+    .courtroom-info, .judge-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #111827 !important; /* Very dark gray */
+        font-size: 0.9rem;
+        font-weight: 700 !important;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .today-badge {
+        background: var(--primary-gold);
+        color: var(--dark-blue);
+        font-weight: 800;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.7rem;
+        margin-left: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-gray);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+        color: var(--primary-blue);
+    }
+
+    .empty-state h6 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #374151;
+        font-size: 1.25rem;
+    }
+
+    /* Dark Mode Toggle */
+    .dark-mode-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .dark-mode-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    /* Footer */
+    .modern-footer {
+        background: var(--dark-blue);
+        color: white;
+        padding: 3rem 0 2rem;
+        margin-top: 4rem;
+        position: relative;
+    }
+
+    .footer-section h6 {
+        color: var(--primary-gold);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .footer-section p {
+        opacity: 0.9;
+        line-height: 1.7;
+        font-weight: 400;
+    }
+
+    .footer-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 2rem 0 1rem;
+    }
+
+    .footer-bottom {
+        text-align: center;
+        opacity: 0.7;
+        font-size: 0.9rem;
+        font-weight: 400;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
         .court-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 2rem;
         }
-
+        
         .court-subtitle {
-            font-size: 1.25rem;
-            font-weight: 500;
-            opacity: 0.9;
-            margin-bottom: 0.5rem;
+            font-size: 1rem;
         }
-
-        .last-updated {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            font-weight: 300;
-        }
-
-        .stats-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            padding: 2rem;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: var(--shadow-light);
-        }
-
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--la-blue);
-            margin-bottom: 0.5rem;
-        }
-
-        .stats-label {
-            font-size: 0.9rem;
-            color: var(--la-gray);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .search-section {
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: var(--shadow-medium);
-            padding: 2rem;
-            margin-top: -3rem;
-            position: relative;
-            z-index: 10;
-            border: 1px solid rgba(0, 63, 127, 0.1);
-        }
-
-        .search-title {
-            color: var(--la-dark-blue);
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
-        }
-
-        .form-control, .form-select {
-            border: 2px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 0.75rem 1rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: var(--la-blue);
-            box-shadow: 0 0 0 0.2rem rgba(0, 63, 127, 0.1);
-        }
-
-        .input-group-text {
-            background: var(--la-light-blue);
-            border: 2px solid #e2e8f0;
-            border-right: none;
-            color: var(--la-blue);
-            border-radius: 0.75rem 0 0 0.75rem;
-        }
-
-        .disclaimer-section {
-            background: linear-gradient(135deg, #fff7e6 0%, #fef3e2 100%);
-            border: 1px solid #fed7aa;
-            border-radius: 1rem;
+        
+        .search-box {
+            margin-top: -2rem;
             padding: 1.5rem;
-            margin: 2rem 0;
-            position: relative;
         }
-
-        .disclaimer-section::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--la-gold);
-            border-radius: 2px 0 0 2px;
+        
+        .stats-number {
+            font-size: 2rem;
         }
-
-        .disclaimer-title {
-            color: #92400e;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            font-size: 1rem;
-        }
-
-        .disclaimer-text {
-            color: #92400e;
-            margin: 0;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        .docket-card {
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: var(--shadow-light);
-            border: 1px solid rgba(0, 63, 127, 0.08);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .docket-card:hover {
-            box-shadow: var(--shadow-medium);
-            transform: translateY(-2px);
-        }
-
-        .card-header-custom {
-            background: linear-gradient(135deg, var(--la-blue) 0%, var(--la-dark-blue) 100%);
-            color: white;
-            padding: 1.5rem 2rem;
-            border: none;
-            position: relative;
-        }
-
-        .card-header-custom h5 {
-            font-weight: 600;
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .hearing-table {
-            margin: 0;
-        }
-
-        .hearing-table thead th {
-            background: var(--la-light-blue);
-            color: var(--la-dark-blue);
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 1rem 1.5rem;
-            border: none;
-        }
-
-        .hearing-table tbody tr {
-            border-left: 4px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .hearing-table tbody tr:hover {
-            background-color: #f8fafc;
-            border-left-color: var(--la-blue);
-            transform: translateX(2px);
-        }
-
-        .hearing-table tbody tr.today {
-            border-left-color: var(--la-gold);
-            background-color: #fffbeb;
-        }
-
-        .hearing-table tbody tr.completed {
-            border-left-color: #10b981;
-            opacity: 0.8;
-        }
-
-        .hearing-table tbody td {
-            padding: 1.25rem 1.5rem;
-            border-top: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-
-        .case-number {
-            font-weight: 700;
-            color: var(--la-dark-blue);
-            font-size: 1rem;
-        }
-
-        .defendant-name {
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .hearing-date {
-            font-weight: 600;
-            color: var(--la-blue);
-        }
-
-        .hearing-time {
+        
+        .modern-table thead th,
+        .modern-table tbody td {
+            padding: 1rem;
             font-size: 0.85rem;
-            color: var(--la-gray);
-            font-weight: 500;
         }
+    }
 
-        .courtroom-info, .judge-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            color: #374151;
-        }
+    /* Dark Mode Styles */
+    [data-theme="dark"] {
+        --primary-blue: #60a5fa;
+        --primary-gold: #fbbf24;
+        --dark-blue: #3b82f6;
+        --light-blue: #1e3a8a;
+        --text-gray: #9ca3af;
+        --border-color: #374151;
+    }
 
-        .status-badge {
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    [data-theme="dark"] body {
+        background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+        color: #f9fafb;
+    }
 
-        .today-badge {
-            background: var(--la-gold);
-            color: var(--la-dark-blue);
-            font-weight: 700;
-            padding: 0.3rem 0.7rem;
-            border-radius: 0.4rem;
-            font-size: 0.75rem;
-            margin-left: 0.5rem;
-        }
+    [data-theme="dark"] .stats-container {
+        background: rgba(31, 41, 55, 0.95);
+        border-color: #374151;
+        color: #f9fafb;
+    }
 
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--la-gray);
-        }
+    [data-theme="dark"] .search-box {
+        background: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+    }
 
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
+    [data-theme="dark"] .search-title {
+        color: #f9fafb;
+    }
+    [data-theme="dark"] .form-control, 
+    [data-theme="dark"] .form-select {
+        background-color: #111827 !important;
+        border-color: #374151 !important;
+        color: #f9fafb !important;
+    }
 
-        .empty-state h6 {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #374151;
-        }
+    [data-theme="dark"] .form-control::placeholder {
+        color: #9ca3af !important;
+        opacity: 1;
+    }
 
-        .court-footer {
-            background: var(--la-dark-blue);
-            color: white;
-            padding: 3rem 0 2rem;
-            margin-top: 4rem;
-        }
+    [data-theme="dark"] .form-control:focus, 
+    [data-theme="dark"] .form-select:focus {
+        background-color: #111827 !important;
+        border-color: #60a5fa !important;
+        color: #f9fafb !important;
+        box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25) !important;
+    }
 
-        .footer-section h6 {
-            color: var(--la-gold);
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
+    [data-theme="dark"] .input-group-text {
+        background-color: #1e3a8a !important;
+        border-color: #374151 !important;
+        color: #60a5fa !important;
+    }
 
-        .footer-section p, .footer-section small {
-            opacity: 0.9;
-            line-height: 1.6;
-        }
+    [data-theme="dark"] .disclaimer {
+        background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+        border-color: #92400e;
+    }
 
-        .footer-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.1);
-            margin: 2rem 0 1rem;
-        }
+    [data-theme="dark"] .disclaimer h6,
+    [data-theme="dark"] .disclaimer p {
+        color: #fbbf24;
+    }
 
-        .footer-bottom {
-            text-align: center;
-            opacity: 0.7;
-            font-size: 0.9rem;
-        }
+    [data-theme="dark"] .modern-card {
+        background: #1f2937;
+        border-color: #374151;
+    }
 
-        @media (max-width: 768px) {
-            .court-title {
-                font-size: 2rem;
-            }
-            
-            .court-subtitle {
-                font-size: 1.1rem;
-            }
-            
-            .search-section {
-                margin-top: -2rem;
-                padding: 1.5rem;
-            }
-            
-            .hearing-table thead th,
-            .hearing-table tbody td {
-                padding: 0.75rem;
-                font-size: 0.85rem;
-            }
-        }
+    [data-theme="dark"] .modern-table thead th {
+        background: #1e3a8a;
+        color: #f9fafb;
+    }
 
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0, 63, 127, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--la-blue);
-            animation: spin 1s ease-in-out infinite;
-        }
+    [data-theme="dark"] .modern-table tbody tr {
+        border-bottom-color: #374151;
+    }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+    [data-theme="dark"] .modern-table tbody tr:hover {
+        background: linear-gradient(90deg, #111827 0%, #1f2937 100%);
+        border-left-color: var(--primary-blue);
+    }
 
-        .fade-in {
-            animation: fadeIn 0.6s ease-in-out;
-        }
+    [data-theme="dark"] .modern-table tbody tr.today {
+        background: linear-gradient(90deg, #451a03 0%, #1f2937 100%);
+        border-left-color: var(--primary-gold);
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+    [data-theme="dark"] .case-number {
+        color: #60a5fa;
+    }
+
+    [data-theme="dark"] .defendant-name {
+        color: #ffffff !important; /* Pure white in dark mode */
+    }
+
+    [data-theme="dark"] .hearing-date {
+        color: var(--primary-blue);
+    }
+
+    [data-theme="dark"] .hearing-time {
+        color: var(--text-gray);
+    }
+
+    [data-theme="dark"] .courtroom-info, 
+    [data-theme="dark"] .judge-info {
+        color: #ffffff !important; /* Pure white in dark mode */
+    }
+
+    [data-theme="dark"] .empty-state {
+        color: var(--text-gray);
+    }
+
+    [data-theme="dark"] .empty-state h6 {
+        color: #d1d5db;
+    }
+
+    [data-theme="dark"] .empty-state i {
+        color: var(--primary-blue);
+    }
+
+    [data-theme="dark"] .modern-footer {
+        background: #111827;
+    }
+
+    [data-theme="dark"] .footer-section h6 {
+        color: var(--primary-gold);
+    }
+
+    [data-theme="dark"] .alert-warning {
+        background: #451a03;
+        border-color: #92400e;
+        color: #fbbf24;
+    }
+
+    /* Loading Animation */
+    .loading-spinner {
+        border: 3px solid rgba(96, 165, 250, 0.3);
+        border-top: 3px solid var(--primary-blue);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 2rem auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Print Styles */
+    @media print {
+        .dark-mode-btn,
+        .search-box,
+        .disclaimer {
+            display: none !important;
         }
-    </style>
+        
+        .docket-header {
+            background: white !important;
+            color: black !important;
+            -webkit-print-color-adjust: exact;
+        }
+        
+        .modern-card {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+        }
+    }
+
+    /* Dark Mode Badge Styles */
+    [data-theme="dark"] .badge.bg-light {
+        background-color: #374151 !important;
+        color: #f9fafb !important;
+        border: 1px solid #4b5563;
+    }
+
+    [data-theme="dark"] .badge.bg-light.text-dark {
+        background-color: #374151 !important;
+        color: #f9fafb !important;
+    }
+
+    /* Alternative approach - more specific targeting */
+    [data-theme="dark"] .card-header-modern .badge.bg-light,
+    [data-theme="dark"] .card-header-modern .badge.text-dark {
+        background-color: #374151 !important;
+        color: #f9fafb !important;
+        border: 1px solid #4b5563;
+    }
+
+    /* Ensure proper contrast and visibility */
+    [data-theme="dark"] .badge.bg-light:hover {
+        background-color: #4b5563 !important;
+        color: #ffffff !important;
+    }
+
+    /* Dark Mode Table Cell Content Styles - Fixed */
+    [data-theme="dark"] .defendant-name {
+        color: #ffffff !important; /* Pure white in dark mode */
+    }
+
+    [data-theme="dark"] .courtroom-info {
+        color: #ffffff !important; /* Pure white in dark mode */
+    }
+
+    [data-theme="dark"] .judge-info {
+        color: #ffffff !important; /* Pure white in dark mode */
+    }
+
+    /* Target the specific span elements containing the text */
+    [data-theme="dark"] .courtroom-info span {
+        color: #ffffff !important; /* Pure white for courtroom text */
+    }
+
+    [data-theme="dark"] .judge-info span {
+        color: #ffffff !important; /* Pure white for judge text */
+    }
+
+    /* More specific targeting if needed */
+    [data-theme="dark"] .modern-table .courtroom-info span,
+    [data-theme="dark"] .modern-table .judge-info span {
+        color: #ffffff !important;
+    }
+
+    /* Keep icons styled differently */
+    [data-theme="dark"] .courtroom-info i,
+    [data-theme="dark"] .judge-info i {
+        color: #60a5fa !important; /* Light blue for icons */
+    }
+
+    /* Ultra-specific targeting if the above doesn't work */
+    [data-theme="dark"] .modern-table tbody td .courtroom-info span,
+    [data-theme="dark"] .modern-table tbody td .judge-info span,
+    [data-theme="dark"] .modern-table tbody td .defendant-name {
+        color: #ffffff !important;
+    }
+
+    /* Dark Mode Card Background Fix */
+    [data-theme="dark"] .modern-card {
+        background: #1f2937 !important;
+        border-color: #374151 !important;
+        color: #f9fafb;
+    }
+
+    /* Dark Mode Table Background */
+    [data-theme="dark"] .modern-table {
+        background: #1f2937 !important;
+        color: #f9fafb;
+    }
+
+    /* Dark Mode Table Body */
+    [data-theme="dark"] .modern-table tbody {
+        background: #1f2937 !important;
+    }
+
+    /* Dark Mode Table Rows */
+    [data-theme="dark"] .modern-table tbody tr {
+        background: #1f2937 !important;
+        border-bottom-color: #374151 !important;
+    }
+
+    /* Dark Mode Table Cells */
+    [data-theme="dark"] .modern-table tbody td {
+        background: #1f2937 !important;
+        color: #f9fafb !important;
+        border-color: #374151 !important;
+    }
+
+    /* Now the text should be visible */
+    [data-theme="dark"] .defendant-name,
+    [data-theme="dark"] .courtroom-info,
+    [data-theme="dark"] .judge-info {
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .courtroom-info span,
+    [data-theme="dark"] .judge-info span {
+        color: #ffffff !important;
+    }
+</style>
 </head>
 <body class="bg-light">
     <!-- Header -->
-    <div class="court-header">
+    <div class="docket-header">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-8">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="court-seal me-3">
-                            <i class='bx bx-shield-alt-2'></i>
-                        </div>
-                        <div>
-                            <h1 class="court-title mb-0">Los Angeles County</h1>
-                            <div class="court-subtitle">Superior Court of California</div>
-                        </div>
+                    <div class="court-badge">
+                        <i class='bx bx-shield-alt-2'></i>
                     </div>
-                    <h2 class="h3 mb-2" style="font-weight: 500;">Public Court Calendar & Docket</h2>
-                    <p class="last-updated mb-0">
+                    <h1 class="court-title">Blackwood County Court</h1>
+                    <div class="court-subtitle">Superior Court of California</div>
+                    <p class="last-updated">
                         <i class='bx bx-time-five me-2'></i>
                         Last Updated: <?php echo date('l, F j, Y \a\t g:i A'); ?>
                     </p>
                 </div>
                 <div class="col-lg-4">
-                    <div class="stats-card">
+                    <div class="stats-container">
                         <div class="stats-number"><?php echo count($upcoming_hearings); ?></div>
                         <div class="stats-label">Upcoming Hearings</div>
+                        <button class="dark-mode-btn mt-3" id="darkModeToggle">
+                            <i class='bx bx-moon me-2'></i>Dark Mode
+                        </button>
                     </div>
                 </div>
             </div>
@@ -516,8 +841,8 @@ foreach ($public_hearings as $hearing) {
         <?php endif; ?>
 
         <!-- Upcoming Hearings -->
-        <div class="docket-card mb-4 fade-in">
-            <div class="card-header-custom">
+        <div class="modern-card">
+            <div class="card-header-modern">
                 <h5>
                     <i class='bx bx-calendar-event me-2'></i>
                     Upcoming Court Hearings
@@ -533,7 +858,7 @@ foreach ($public_hearings as $hearing) {
                     </div>
                 <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table hearing-table" id="upcomingTable">
+                        <table class="table modern-table mb-0" id="upcomingTable">
                             <thead>
                                 <tr>
                                     <th>Case Number</th>
@@ -600,8 +925,8 @@ foreach ($public_hearings as $hearing) {
         </div>
 
         <!-- Past Hearings -->
-        <div class="docket-card mb-4 fade-in">
-            <div class="card-header-custom" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+        <div class="modern-card">
+            <div class="card-header-modern secondary">
                 <h5>
                     <i class='bx bx-history me-2'></i>
                     Recent Court Proceedings
@@ -997,6 +1322,44 @@ foreach ($public_hearings as $hearing) {
             // Optional: Send performance data to analytics
             if (loadTime > 3000) {
                 console.warn('Page load time is slow, consider optimization');
+            }
+        });
+
+        // Dark Mode Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            
+            if (darkModeToggle) {
+                // Load saved theme
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                updateDarkModeIcon();
+                
+                // Toggle dark mode
+                darkModeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateDarkModeIcon();
+                });
+                
+                function updateDarkModeIcon() {
+                    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+                    const icon = darkModeToggle.querySelector('i');
+                    const text = darkModeToggle.querySelector('span');
+                    
+                    if (theme === 'dark') {
+                        icon.className = 'bx bx-sun';
+                        if (text) text.textContent = 'Light Mode';
+                        darkModeToggle.style.background = 'rgba(255,255,255,0.2)';
+                    } else {
+                        icon.className = 'bx bx-moon';
+                        if (text) text.textContent = 'Dark Mode';
+                        darkModeToggle.style.background = 'rgba(255,255,255,0.1)';
+                    }
+                }
             }
         });
     </script>

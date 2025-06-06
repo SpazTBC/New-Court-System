@@ -26,7 +26,7 @@ if (isset($_POST['submit'])) {
     if (empty($character)) $errors[] = 'character_required';
     
     // Job validation
-    $valid_jobs = ['Civilian', 'Judge', 'Attorney', 'Police', 'AG'];
+    $valid_jobs = ['Civilian', 'Judge', 'Attorney', 'Police', 'AG','Assistant'];
     if (!in_array($job, $valid_jobs)) $errors[] = 'invalid_job';
 
     if (empty($errors)) {

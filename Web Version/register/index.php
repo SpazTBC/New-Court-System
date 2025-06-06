@@ -39,7 +39,7 @@ include("../include/database.php");
                             </div>
                             
                             <div class="mb-3">
-                                <input type="text" class="form-control" name="jobs" id="jobs" placeholder="Civilian, Attorney, Judge, Police, AG" required>
+                                <input type="text" class="form-control" name="jobs" id="jobs" placeholder="Civilian, Attorney, Judge, Police, AG, Assistant" required>
                             </div>
                             
                             <input type="hidden" name="ip" id="ip" value="<?php echo $_SERVER['REMOTE_ADDR']; ?>">

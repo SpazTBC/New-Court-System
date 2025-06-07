@@ -156,20 +156,79 @@ if (isset($_POST['update_hearing'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Set minimum date to current date/time
         document.addEventListener('DOMContentLoaded', function() {
             const hearingDateInput = document.getElementById('hearing_date');
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            hearingDateInput.min = now.toISOString().slice(0, 16);
+            const hearingStatusSelect = document.getElementById('hearing_status');
+            
+            function updateDateConstraints() {
+                const status = hearingStatusSelect.value;
+                
+                if (status === 'scheduled') {
+                    // For scheduled hearings, date must be in the future
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    hearingDateInput.min = now.toISOString().slice(0, 16);
+                } else {
+                    // For other statuses, remove the min constraint
+                    hearingDateInput.removeAttribute('min');
+                }
+            }
+            
+            function validateCompletedStatus() {
+                const status = hearingStatusSelect.value;
+                const hearingDateTime = new Date(hearingDateInput.value);
+                const now = new Date();
+                
+                if (status === 'completed' && hearingDateTime > now) {
+                    alert('Cannot mark hearing as completed - the scheduled date/time has not yet occurred.');
+                    hearingStatusSelect.value = hearingStatusSelect.getAttribute('data-original-value') || 'scheduled';
+                    return false;
+                }
+                return true;
+            }
+            
+            // Store original value when page loads
+            hearingStatusSelect.setAttribute('data-original-value', hearingStatusSelect.value);
+            
+            // Set initial constraints
+            updateDateConstraints();
+            
+            // Update constraints when status changes
+            hearingStatusSelect.addEventListener('change', function() {
+                updateDateConstraints();
+                validateCompletedStatus();
+            });
+            
+            // Also validate when date changes and status is completed
+            hearingDateInput.addEventListener('change', function() {
+                if (hearingStatusSelect.value === 'completed') {
+                    validateCompletedStatus();
+                }
+            });
         });
 
-        // Form validation
+        // Form validation with additional completed status check
         (function() {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')
             Array.prototype.slice.call(forms).forEach(function(form) {
                 form.addEventListener('submit', function(event) {
+                    const hearingStatusSelect = document.getElementById('hearing_status');
+                    const hearingDateInput = document.getElementById('hearing_date');
+                    
+                    // Check if trying to mark as completed before the hearing date/time
+                    if (hearingStatusSelect.value === 'completed') {
+                        const hearingDateTime = new Date(hearingDateInput.value);
+                        const now = new Date();
+                        
+                        if (hearingDateTime > now) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            alert('Cannot mark hearing as completed - the scheduled date/time has not yet occurred.');
+                            return false;
+                        }
+                    }
+                    
                     if (!form.checkValidity()) {
                         event.preventDefault()
                         event.stopPropagation()

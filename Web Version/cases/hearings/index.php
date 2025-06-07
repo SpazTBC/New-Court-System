@@ -20,17 +20,19 @@ $current_user_job = $user_data['job'] ?? '';
 $hearings_stmt = $conn->prepare("
     SELECT c.*, u.charactername as creator_name,
            COALESCE(j1.charactername, j2.charactername, j3.charactername, j4.charactername, 'TBD') as judge_name
-    FROM cases c 
-    LEFT JOIN users u ON c.assigneduser = u.username 
+    FROM cases c
+    LEFT JOIN users u ON c.assigneduser = u.username
     LEFT JOIN users j1 ON c.shared01 = j1.username AND j1.job = 'Judge'
     LEFT JOIN users j2 ON c.shared02 = j2.username AND j2.job = 'Judge'  
     LEFT JOIN users j3 ON c.shared03 = j3.username AND j3.job = 'Judge'
     LEFT JOIN users j4 ON c.shared04 = j4.username AND j4.job = 'Judge'
-    WHERE (c.shared01 = ? OR c.shared02 = ? OR c.shared03 = ? OR c.shared04 = ? OR c.assigneduser = ?) 
-    AND c.hearing_date IS NOT NULL 
-    AND c.hearing_date >= NOW() 
-    ORDER BY c.hearing_date ASC
-");
+    WHERE (c.shared01 = ? OR c.shared02 = ? OR c.shared03 = ? OR c.shared04 = ? OR c.assigneduser = ?)
+    AND c.hearing_date IS NOT NULL
+    AND (
+        (c.hearing_status = 'scheduled' AND c.hearing_date >= NOW()) 
+        OR c.hearing_status = 'postponed'
+    )
+    ORDER BY c.hearing_date ASC");
 $username = $_SESSION['username'];
 $hearings_stmt->execute([$username, $username, $username, $username, $username]);
 $hearings = $hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -39,17 +41,20 @@ $hearings = $hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
 $past_hearings_stmt = $conn->prepare("
     SELECT c.*, u.charactername as creator_name,
            COALESCE(j1.charactername, j2.charactername, j3.charactername, j4.charactername, 'TBD') as judge_name
-    FROM cases c 
-    LEFT JOIN users u ON c.assigneduser = u.username 
+    FROM cases c
+    LEFT JOIN users u ON c.assigneduser = u.username
     LEFT JOIN users j1 ON c.shared01 = j1.username AND j1.job = 'Judge'
     LEFT JOIN users j2 ON c.shared02 = j2.username AND j2.job = 'Judge'  
     LEFT JOIN users j3 ON c.shared03 = j3.username AND j3.job = 'Judge'
     LEFT JOIN users j4 ON c.shared04 = j4.username AND j4.job = 'Judge'
-    WHERE (c.shared01 = ? OR c.shared02 = ? OR c.shared03 = ? OR c.shared04 = ? OR c.assigneduser = ?) 
-    AND c.hearing_date IS NOT NULL 
-    AND c.hearing_date < NOW() 
-    ORDER BY c.hearing_date DESC
-");
+    WHERE (c.shared01 = ? OR c.shared02 = ? OR c.shared03 = ? OR c.shared04 = ? OR c.assigneduser = ?)
+    AND c.hearing_date IS NOT NULL
+    AND (
+        c.hearing_status = 'completed' 
+        OR c.hearing_status = 'cancelled'
+        OR (c.hearing_status = 'scheduled' AND c.hearing_date < NOW())
+    )
+    ORDER BY c.hearing_date DESC");
 $past_hearings_stmt->execute([$username, $username, $username, $username, $username]);
 $past_hearings = $past_hearings_stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>

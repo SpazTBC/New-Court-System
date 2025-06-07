@@ -233,8 +233,8 @@ include("../include/database.php");
                                                         <br>
                                                         <small class="text-muted">Size: <?php echo $fileSizeDisplay; ?></small>
                                                     </div>
-                                                    <span class="badge bg-primary rounded-pill">
-                                                        <?php echo date("m/d/Y H:i", filemtime($file)); ?>
+                                                    <span class="badge bg-primary rounded-pill" data-timestamp="<?php echo filemtime($file); ?>">
+                                                        <?php echo date("m/d/Y h:i A", filemtime($file)); ?>
                                                     </span>
                                                 </a>
                                             <?php endforeach; ?>
@@ -385,5 +385,31 @@ include("../include/database.php");
             }
         });
     </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Convert all timestamps to user's local time
+    const timestampElements = document.querySelectorAll('[data-timestamp]');
+    
+    timestampElements.forEach(function(element) {
+        const timestamp = parseInt(element.getAttribute('data-timestamp')) * 1000; // Convert to milliseconds
+        const date = new Date(timestamp);
+        
+        // Format: MM/DD/YYYY HH:MM (24-hour format)
+        const formatted = date.toLocaleString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        element.textContent = formatted;
+    });
+});
+</script>
+
+
 </body>
 </html>

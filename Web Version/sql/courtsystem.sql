@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 06, 2025 at 06:17 AM
+-- Generation Time: Jun 07, 2025 at 04:57 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -67,7 +67,9 @@ CREATE TABLE `cases` (
   `hearing_date` datetime DEFAULT NULL,
   `courtroom` varchar(100) DEFAULT NULL,
   `hearing_notes` text DEFAULT NULL,
-  `hearing_status` enum('scheduled','completed','postponed','cancelled') DEFAULT 'scheduled'
+  `hearing_status` enum('scheduled','completed','postponed','cancelled') DEFAULT 'scheduled',
+  `closed_date` datetime DEFAULT NULL,
+  `closed_by` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

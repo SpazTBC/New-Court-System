@@ -38,14 +38,31 @@ include("../include/database.php");
     <div class="container py-4">
         <?php
         // Display upload messages
-        if (isset($_GET['success']) && $_GET['success'] == 'upload') {
-            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bx bx-check-circle"></i> File uploaded successfully!';
-            if (isset($_GET['file'])) {
-                echo ' File: ' . htmlspecialchars(urldecode($_GET['file']));
+        if (isset($_GET['success'])) {
+            $success = $_GET['success'];
+            $success_message = '';
+            
+            switch($success) {
+                case 'upload':
+                    $success_message = 'File uploaded successfully!';
+                    if (isset($_GET['file'])) {
+                        $success_message .= ' File: ' . htmlspecialchars(urldecode($_GET['file']));
+                    }
+                    break;
+                case 'case_closed':
+                    $success_message = 'Case has been successfully closed.';
+                    break;
+                case 'case_reopened':
+                    $success_message = 'Case has been successfully reopened.';
+                    break;
             }
-            echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>';
+            
+            if ($success_message) {
+                echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bx bx-check-circle"></i> ' . $success_message . '
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>';
+            }
         }
 
         // Display error messages
@@ -90,6 +107,18 @@ include("../include/database.php");
                     break;
                 case 'cant_write':
                     $error_message = "Failed to write file to disk. Please contact administrator.";
+                    break;
+                case 'close_failed':
+                    $error_message = "Failed to close case. Please try again.";
+                    break;
+                case 'reopen_failed':
+                    $error_message = "Failed to reopen case. Please try again.";
+                    break;
+                case 'case_not_found':
+                    $error_message = "Case not found or you don't have permission to access it.";
+                    break;
+                case 'access_denied':
+                    $error_message = "You don't have permission to perform this action.";
                     break;
                 default:
                     $error_message = "An unknown error occurred during upload.";
@@ -231,13 +260,27 @@ include("../include/database.php");
                 <?php if($case['job'] !== "Civilian" && $_SESSION['username'] !== $case['defendent']): ?>
                     <div class="mt-4">
                         <div class="d-flex gap-2">
-                            <a href="modify.php?id=<?php echo $case['id']; ?>" class="btn btn-warning">
-                                <i class='bx bx-edit'></i> Modify
-                            </a>
-                            <a href="delete.php?id=<?php echo $case['id']; ?>" class="btn btn-danger" 
-                                onclick="return confirm('Are you sure you want to delete this case?')">
-                                <i class='bx bx-trash'></i> Delete
-                            </a>
+                            <?php if($case['status'] !== 'closed'): ?>
+                                <a href="modify.php?id=<?php echo $case['id']; ?>" class="btn btn-warning">
+                                    <i class='bx bx-edit'></i> Modify
+                                </a>
+                                <a href="close_case.php?id=<?php echo $case['id']; ?>" class="btn btn-success" 
+                                    onclick="return confirm('Are you sure you want to close this case? This will mark it as resolved but keep all data for future reference.')">
+                                    <i class='bx bx-check-circle'></i> Close Case
+                                </a>
+                                <a href="delete.php?id=<?php echo $case['id']; ?>" class="btn btn-danger" 
+                                    onclick="return confirm('Are you sure you want to delete this case? This action cannot be undone!')">
+                                    <i class='bx bx-trash'></i> Delete
+                                </a>
+                            <?php else: ?>
+                                <a href="reopen_case.php?id=<?php echo $case['id']; ?>" class="btn btn-primary" 
+                                    onclick="return confirm('Are you sure you want to reopen this case?')">
+                                    <i class='bx bx-refresh'></i> Reopen Case
+                                </a>
+                                <div class="alert alert-success d-inline-flex align-items-center ms-2 mb-0 py-2">
+                                    <i class='bx bx-check-circle me-2'></i> This case is closed
+                                </div>
+                            <?php endif; ?>
                             <a href="index.php" class="btn btn-secondary">
                                 <i class='bx bx-arrow-back'></i> Back to Cases
                             </a>

@@ -18,13 +18,10 @@ $current_user_job = $user_data['job'] ?? '';
 // Check if user has permission and case exists
 $stmt = $conn->prepare("
     SELECT * FROM cases 
-    WHERE id = :caseId 
-    AND (shared01 = :username OR shared02 = :username OR shared03 = :username OR shared04 = :username OR assigneduser = :username)
+    WHERE id = ? 
+    AND (shared01 = ? OR shared02 = ? OR shared03 = ? OR shared04 = ? OR assigneduser = ?)
 ");
-$stmt->execute([
-    'username' => $_SESSION['username'],
-    'caseId' => $caseId
-]);
+$stmt->execute([$caseId, $_SESSION['username'], $_SESSION['username'], $_SESSION['username'], $_SESSION['username'], $_SESSION['username']]);
 $case = $stmt->fetch();
 
 if (!$case) {

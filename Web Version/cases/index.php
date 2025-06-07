@@ -103,14 +103,15 @@ $characterName = $user['charactername'];
                             $isAG = ($userJob === 'ag');
                             $isCivilian = ($userJob === 'civilian');
 
+                            // Active Cases Query
                             if ($isCivilian) {
                                 // For civilians, look for cases where they are the defendant (by character name)
-                                $query = "SELECT * FROM cases WHERE defendent = :charactername";
+                                $query = "SELECT * FROM cases WHERE defendent = :charactername AND (status != 'closed' OR status IS NULL)";
                                 $stmt = $conn->prepare($query);
                                 $stmt->bindParam(':charactername', $characterName);
                             } else {
                                 // For non-civilians, get cases where this user is the assigned user (creator)
-                                $query = "SELECT * FROM cases WHERE assigneduser = :username";
+                                $query = "SELECT * FROM cases WHERE assigneduser = :username AND (status != 'closed' OR status IS NULL)";
 
                                 // For non-AG users, filter out pending cases
                                 if (!$isAG) {
@@ -133,6 +134,20 @@ $characterName = $user['charactername'];
                             
                             $stmt->execute();
                             $cases = $stmt->fetchAll();
+
+                            // Closed Cases Query
+                            if ($isCivilian) {
+                                $closed_query = "SELECT * FROM cases WHERE defendent = :charactername AND status = 'closed' ORDER BY closed_date DESC";
+                                $closed_stmt = $conn->prepare($closed_query);
+                                $closed_stmt->bindParam(':charactername', $characterName);
+                            } else {
+                                $closed_query = "SELECT * FROM cases WHERE assigneduser = :username AND status = 'closed' ORDER BY closed_date DESC";
+                                $closed_stmt = $conn->prepare($closed_query);
+                                $closed_stmt->bindParam(':username', $_SESSION['username']);
+                            }
+
+                            $closed_stmt->execute();
+                            $closed_cases = $closed_stmt->fetchAll();
                             
                             if(!empty($cases)):
                                 foreach($cases as $case):
@@ -156,8 +171,10 @@ $characterName = $user['charactername'];
                                         <span class="badge bg-warning">Pending Approval</span>
                                     <?php elseif(isset($case['status']) && $case['status'] == 'denied'): ?>
                                         <span class="badge bg-danger">Denied</span>
+                                    <?php elseif(isset($case['status']) && $case['status'] == 'closed'): ?>
+                                        <span class="badge bg-success">Closed</span>
                                     <?php else: ?>
-                                        <span class="badge bg-success">Approved</span>
+                                        <span class="badge bg-primary">Active</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -176,9 +193,9 @@ $characterName = $user['charactername'];
                             <tr>
                                 <td colspan="7" class="text-center">
                                     <?php if ($isCivilian): ?>
-                                        No cases found where you are listed as a defendant.
+                                        No active cases found where you are listed as a defendant.
                                     <?php else: ?>
-                                        No approved cases found
+                                        No active cases found
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -188,6 +205,73 @@ $characterName = $user['charactername'];
                 </div>
             </div>
         </div>
+
+        <!-- Closed Cases Section -->
+        <?php if (!empty($closed_cases)): ?>
+        <div class="card shadow-lg mb-4">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0"><i class='bx bx-check-circle'></i> Closed Cases (<?php echo count($closed_cases); ?>)</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Case Number</th>
+                                <th>Supervisor</th>
+                                <th>Date Assigned</th>
+                                <th>Date Closed</th>
+                                <th>Closed By</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($closed_cases as $case): ?>
+                            <tr class="table-light">
+                                <td><?php echo htmlspecialchars($case['caseid']); ?></td>
+                                <td><?php echo htmlspecialchars($case['type']); ?></td>
+                                <td>
+                                    <?php if($case['supervisor']): ?>
+                                        <span class="badge bg-success">
+                                            <i class='bx bx-check'></i> <?php echo htmlspecialchars($case['supervisor']); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary">No Supervisor</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($case['assigned']); ?></td>
+                                <td>
+                                    <?php if($case['closed_date']): ?>
+                                        <?php echo date('M j, Y g:i A', strtotime($case['closed_date'])); ?>
+                                    <?php else: ?>
+                                        <span class="text-muted">N/A</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if($case['closed_by']): ?>
+                                        <span class="badge bg-info"><?php echo htmlspecialchars($case['closed_by']); ?></span>
+                                    <?php else: ?>
+                                        <span class="text-muted">N/A</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($case['type']); ?></td>
+                                <td>
+                                    <a href="view.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-info">View</a>
+                                    <?php if (!$isCivilian): ?>
+                                        <a href="reopen_case.php?id=<?php echo $case['id']; ?>" class="btn btn-sm btn-success" 
+                                           onclick="return confirm('Are you sure you want to reopen this case?')">Reopen</a>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Supervisor Cases Section -->
         <?php if(isSupervisor($_SESSION['username'])): ?>

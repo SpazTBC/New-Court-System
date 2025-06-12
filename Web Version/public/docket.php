@@ -1,6 +1,9 @@
 <?php
 include("../include/database.php");
 
+// Set the correct timezone for your server
+date_default_timezone_set('America/Los_Angeles'); // PDT/PST timezone
+
 // Get all scheduled hearings for public display with judge information
 try {
     $public_hearings_stmt = $conn->prepare("
@@ -872,9 +875,13 @@ foreach ($public_hearings as $hearing) {
                             <tbody>
                                 <?php foreach ($upcoming_hearings as $hearing): ?>
                                     <?php
+                                    // Method 2 from our test - String comparison (most reliable)
+                                    $hearing_date_only = substr($hearing['hearing_date'], 0, 10);
+                                    $today_date_only = date('Y-m-d');
+                                    $is_today = ($hearing_date_only === $today_date_only);
+                                    
+                                    // Create DateTime for display formatting
                                     $hearing_date = new DateTime($hearing['hearing_date']);
-                                    $today = new DateTime('today');
-                                    $is_today = $hearing_date->format('Y-m-d') === $today->format('Y-m-d');
                                     ?>
                                     <tr class="<?php echo $is_today ? 'today' : ''; ?>" data-status="<?php echo $hearing['hearing_status']; ?>">
                                         <td>
@@ -1059,48 +1066,27 @@ foreach ($public_hearings as $hearing) {
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Enhanced search functionality with loading states
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            const searchTerm = this.value.toLowerCase();
-            const tables = ['upcomingTable', 'pastTable'];
-            
-            // Show loading state
-            this.style.background = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'20\' height=\'20\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23666\' d=\'M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z\'%3E%3CanimateTransform attributeName=\'transform\' dur=\'0.75s\' repeatCount=\'indefinite\' type=\'rotate\' values=\'0 12 12;360 12 12\'/%3E%3C/path%3E%3C/svg%3E") no-repeat right 12px center';
-            
-            setTimeout(() => {
-                tables.forEach(tableId => {
-                    const table = document.getElementById(tableId);
-                    if (table) {
-                        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-                        let visibleCount = 0;
-                        
-                        for (let row of rows) {
-                            const text = row.textContent.toLowerCase();
-                            const isVisible = text.includes(searchTerm);
-                            row.style.display = isVisible ? '' : 'none';
-                            if (isVisible) visibleCount++;
-                        }
-                        
-                        // Update table visibility
-                        const tableCard = table.closest('.docket-card');
-                        if (tableCard) {
-                            const badge = tableCard.querySelector('.badge');
-                            if (badge) badge.textContent = visibleCount;
-                        }
-                    }
-                });
-                
-                // Remove loading state
-                this.style.background = '';
-            }, 200);
-        });
+<script>
+    // Sync JavaScript timezone with PHP server timezone
+    const serverTimezone = 'America/Los_Angeles'; // Match your PHP timezone
+    const serverDate = '<?php echo date('Y-m-d'); ?>';
+    const serverDateTime = '<?php echo date('c'); ?>'; // ISO format
+    
+    // Function to get server-synced date
+    function getServerSyncedDate() {
+        // Use the server date directly instead of client date
+        return new Date(serverDateTime);
+    }
 
-        // Enhanced status filter with smooth transitions
-        document.getElementById('filterStatus').addEventListener('change', function() {
-            const filterValue = this.value;
-            const tables = ['upcomingTable', 'pastTable'];
-            
+    // Enhanced search functionality with loading states
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tables = ['upcomingTable', 'pastTable'];
+        
+        // Show loading state
+        this.style.background = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'20\' height=\'20\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23666\' d=\'M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z\'%3E%3CanimateTransform attributeName=\'transform\' dur=\'0.75s\' repeatCount=\'indefinite\' type=\'rotate\' values=\'0 12 12;360 12 12\'/%3E%3C/path%3E%3C/svg%3E") no-repeat right 12px center';
+        
+        setTimeout(() => {
             tables.forEach(tableId => {
                 const table = document.getElementById(tableId);
                 if (table) {
@@ -1108,260 +1094,295 @@ foreach ($public_hearings as $hearing) {
                     let visibleCount = 0;
                     
                     for (let row of rows) {
-                        const status = row.getAttribute('data-status');
-                        const shouldShow = !filterValue || status === filterValue;
-                        
-                        if (shouldShow) {
-                            row.style.display = '';
-                            row.style.opacity = '0';
-                            setTimeout(() => {
-                                row.style.transition = 'opacity 0.3s ease';
-                                row.style.opacity = '1';
-                            }, visibleCount * 50);
-                            visibleCount++;
-                        } else {
-                            row.style.transition = 'opacity 0.2s ease';
-                            row.style.opacity = '0';
-                            setTimeout(() => {
-                                row.style.display = 'none';
-                            }, 200);
-                        }
+                        const text = row.textContent.toLowerCase();
+                        const isVisible = text.includes(searchTerm);
+                        row.style.display = isVisible ? '' : 'none';
+                        if (isVisible) visibleCount++;
                     }
                     
-                    // Update badge count
-                    const tableCard = table.closest('.docket-card');
+                    // Update table visibility
+                    const tableCard = table.closest('.modern-card');
                     if (tableCard) {
                         const badge = tableCard.querySelector('.badge');
                         if (badge) badge.textContent = visibleCount;
                     }
                 }
             });
-        });
+            
+            // Remove loading state
+            this.style.background = '';
+        }, 200);
+    });
 
-        // Auto-refresh with user notification
-        let refreshTimer;
-        let refreshCountdown = 300; // 5 minutes
-
-        function startRefreshCountdown() {
-            refreshTimer = setInterval(() => {
-                refreshCountdown--;
+    // Enhanced status filter with smooth transitions
+    document.getElementById('filterStatus').addEventListener('change', function() {
+        const filterValue = this.value;
+        const tables = ['upcomingTable', 'pastTable'];
+        
+        tables.forEach(tableId => {
+            const table = document.getElementById(tableId);
+            if (table) {
+                const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                let visibleCount = 0;
                 
-                if (refreshCountdown <= 30 && refreshCountdown > 0) {
-                    // Show countdown notification
-                    if (!document.getElementById('refresh-notification')) {
-                        const notification = document.createElement('div');
-                        notification.id = 'refresh-notification';
-                        notification.className = 'alert alert-info position-fixed';
-                        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-                        notification.innerHTML = `
-                            <div class="d-flex align-items-center">
-                                <div class="loading-spinner me-2"></div>
-                                <div>
-                                    <strong>Auto-refresh in ${refreshCountdown}s</strong><br>
-                                    <small>Page will update automatically</small>
-                                </div>
-                                <button type="button" class="btn-close ms-auto" onclick="cancelRefresh()"></button>
+                for (let row of rows) {
+                    const status = row.getAttribute('data-status');
+                    const shouldShow = !filterValue || status === filterValue;
+                    
+                    if (shouldShow) {
+                        row.style.display = '';
+                        row.style.opacity = '0';
+                        setTimeout(() => {
+                            row.style.transition = 'opacity 0.3s ease';
+                            row.style.opacity = '1';
+                        }, visibleCount * 50);
+                        visibleCount++;
+                    } else {
+                        row.style.transition = 'opacity 0.2s ease';
+                        row.style.opacity = '0';
+                        setTimeout(() => {
+                            row.style.display = 'none';
+                        }, 200);
+                    }
+                }
+                
+                // Update badge count
+                const tableCard = table.closest('.modern-card');
+                if (tableCard) {
+                    const badge = tableCard.querySelector('.badge');
+                    if (badge) badge.textContent = visibleCount;
+                }
+            }
+        });
+    });
+
+    // Auto-refresh with user notification
+    let refreshTimer;
+    let refreshCountdown = 300; // 5 minutes
+
+    function startRefreshCountdown() {
+        refreshTimer = setInterval(() => {
+            refreshCountdown--;
+            
+            if (refreshCountdown <= 30 && refreshCountdown > 0) {
+                // Show countdown notification
+                if (!document.getElementById('refresh-notification')) {
+                    const notification = document.createElement('div');
+                    notification.id = 'refresh-notification';
+                    notification.className = 'alert alert-info position-fixed';
+                    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                    notification.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="loading-spinner me-2"></div>
+                            <div>
+                                <strong>Auto-refresh in ${refreshCountdown}s</strong><br>
+                                <small>Page will update automatically</small>
                             </div>
-                        `;
-                        document.body.appendChild(notification);
-                    } else {
-                        document.querySelector('#refresh-notification strong').textContent = `Auto-refresh in ${refreshCountdown}s`;
-                    }
+                            <button type="button" class="btn-close ms-auto" onclick="cancelRefresh()"></button>
+                        </div>
+                    `;
+                    document.body.appendChild(notification);
+                } else {
+                    document.querySelector('#refresh-notification strong').textContent = `Auto-refresh in ${refreshCountdown}s`;
                 }
+            }
+            
+            if (refreshCountdown <= 0) {
+                location.reload();
+            }
+        }, 1000);
+    }
+
+    function cancelRefresh() {
+        clearInterval(refreshTimer);
+        const notification = document.getElementById('refresh-notification');
+        if (notification) {
+            notification.remove();
+        }
+        refreshCountdown = 300; // Reset timer
+        setTimeout(startRefreshCountdown, 60000); // Restart in 1 minute
+    }
+
+    // Start the refresh countdown
+    setTimeout(startRefreshCountdown, 1000);
+
+    // Smooth scroll for better UX
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add smooth scrolling to all anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add intersection observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Add click tracking for analytics (optional)
+        document.querySelectorAll('.modern-table tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                const caseNumber = this.querySelector('.case-number').textContent.trim();
+                console.log(`Case ${caseNumber} row clicked`);
+            });
+        });
+
+        // Keyboard navigation support
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+
+        // Add tooltips for better accessibility
+        const tooltipElements = document.querySelectorAll('[title]');
+        tooltipElements.forEach(el => {
+            el.setAttribute('data-bs-toggle', 'tooltip');
+        });
+
+        // Initialize Bootstrap tooltips if available
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    });
+
+    // Print functionality - Use server date
+    function printDocket() {
+        const printWindow = window.open('', '_blank');
+        const serverDateFormatted = '<?php echo date('m/d/Y'); ?>';
+        const serverDateTimeFormatted = '<?php echo date('F j, Y g:i A T'); ?>';
+        
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Blackwood County Court Docket - ${serverDateFormatted}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #003f7f; padding-bottom: 20px; }
+                    .court-title { color: #003f7f; font-size: 24px; font-weight: bold; margin: 0; }
+                    .subtitle { color: #666; margin: 5px 0; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f5f5f5; font-weight: bold; }
+                    .case-number { font-weight: bold; }
+                    .today { background-color: #fff3cd; }
+                    .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="court-title">Blackwood County Superior Court</div>
+                    <div class="subtitle">Public Court Calendar</div>
+                    <div class="subtitle">Generated: ${serverDateTimeFormatted}</div>
+                </div>
+                ${document.querySelector('#upcomingTable') ? document.querySelector('#upcomingTable').parentElement.outerHTML : ''}
+                <div class="footer">
+                    <p>This document was generated from the Blackwood County Superior Court public docket system.</p>
+                    <p>For the most current information, please visit the courthouse or call (213) 830-0800.</p>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    // Add print button (optional)
+    const printButton = document.createElement('button');
+    printButton.className = 'btn btn-outline-primary btn-sm position-fixed';
+    printButton.style.cssText = 'bottom: 20px; right: 20px; z-index: 1000;';
+    printButton.innerHTML = '<i class="bx bx-printer me-1"></i> Print';
+    printButton.onclick = printDocket;
+    document.body.appendChild(printButton);
+
+    // Mobile menu improvements
+    if (window.innerWidth <= 768) {
+        document.querySelectorAll('.modern-table').forEach(table => {
+            table.style.fontSize = '0.85rem';
+        });
+    }
+
+    // Performance monitoring
+    window.addEventListener('load', function() {
+        const loadTime = performance.now();
+        console.log(`Page loaded in ${Math.round(loadTime)}ms`);
+        
+        // Optional: Send performance data to analytics
+        if (loadTime > 3000) {
+            console.warn('Page load time is slow, consider optimization');
+        }
+    });
+
+    // Dark Mode Toggle Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        if (darkModeToggle) {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateDarkModeIcon();
+            
+            // Toggle dark mode
+            darkModeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 
-                if (refreshCountdown <= 0) {
-                    location.reload();
-                }
-            }, 1000);
-        }
-
-        function cancelRefresh() {
-            clearInterval(refreshTimer);
-            const notification = document.getElementById('refresh-notification');
-            if (notification) {
-                notification.remove();
-            }
-            refreshCountdown = 300; // Reset timer
-            setTimeout(startRefreshCountdown, 60000); // Restart in 1 minute
-        }
-
-        // Start the refresh countdown
-        setTimeout(startRefreshCountdown, 1000);
-
-        // Smooth scroll for better UX
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add smooth scrolling to all anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
-
-            // Add intersection observer for fade-in animations
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, observerOptions);
-
-            // Observe all fade-in elements
-            document.querySelectorAll('.fade-in').forEach(el => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px)';
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(el);
-            });
-
-            // Add click tracking for analytics (optional)
-            document.querySelectorAll('.hearing-table tbody tr').forEach(row => {
-                row.addEventListener('click', function() {
-                    const caseidber = this.querySelector('.case-number').textContent.trim();
-                    console.log(`Case ${caseidber} row clicked`); // Replace with actual analytics
-                });
-            });
-
-            // Keyboard navigation support
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'f') {
-                    e.preventDefault();
-                    document.getElementById('searchInput').focus();
-                }
-            });
-
-            // Add tooltips for better accessibility
-            const tooltipElements = document.querySelectorAll('[title]');
-            tooltipElements.forEach(el => {
-                el.setAttribute('data-bs-toggle', 'tooltip');
-            });
-
-            // Initialize Bootstrap tooltips if available
-            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            }
-        });
-
-        // Print functionality
-        function printDocket() {
-            const printWindow = window.open('', '_blank');
-            const printContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>LA County Court Docket - ${new Date().toLocaleDateString()}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #003f7f; padding-bottom: 20px; }
-                        .court-title { color: #003f7f; font-size: 24px; font-weight: bold; margin: 0; }
-                        .subtitle { color: #666; margin: 5px 0; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #f5f5f5; font-weight: bold; }
-                        .case-number { font-weight: bold; }
-                        .today { background-color: #fff3cd; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="court-title">Los Angeles County Superior Court</div>
-                        <div class="subtitle">Public Court Calendar</div>
-                        <div class="subtitle">Generated: ${new Date().toLocaleString()}</div>
-                    </div>
-                    ${document.querySelector('#upcomingTable') ? document.querySelector('#upcomingTable').parentElement.outerHTML : ''}
-                    <div class="footer">
-                        <p>This document was generated from the LA County Superior Court public docket system.</p>
-                        <p>For the most current information, please visit the courthouse or call (213) 830-0800.</p>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            printWindow.print();
-        }
-
-        // Add print button (optional)
-        const printButton = document.createElement('button');
-        printButton.className = 'btn btn-outline-primary btn-sm position-fixed';
-        printButton.style.cssText = 'bottom: 20px; right: 20px; z-index: 1000;';
-        printButton.innerHTML = '<i class="bx bx-printer me-1"></i> Print';
-        printButton.onclick = printDocket;
-        document.body.appendChild(printButton);
-
-        // Mobile menu improvements
-        if (window.innerWidth <= 768) {
-            document.querySelectorAll('.hearing-table').forEach(table => {
-                table.style.fontSize = '0.85rem';
-            });
-        }
-
-        // Performance monitoring
-        window.addEventListener('load', function() {
-            const loadTime = performance.now();
-            console.log(`Page loaded in ${Math.round(loadTime)}ms`);
-            
-            // Optional: Send performance data to analytics
-            if (loadTime > 3000) {
-                console.warn('Page load time is slow, consider optimization');
-            }
-        });
-
-        // Dark Mode Toggle Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            
-            if (darkModeToggle) {
-                // Load saved theme
-                const savedTheme = localStorage.getItem('theme') || 'light';
-                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
                 updateDarkModeIcon();
+            });
+            
+            function updateDarkModeIcon() {
+                const theme = document.documentElement.getAttribute('data-theme') || 'light';
+                const icon = darkModeToggle.querySelector('i');
+                const text = darkModeToggle.querySelector('span');
                 
-                // Toggle dark mode
-                darkModeToggle.addEventListener('click', function() {
-                    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('theme', newTheme);
-                    updateDarkModeIcon();
-                });
-                
-                function updateDarkModeIcon() {
-                    const theme = document.documentElement.getAttribute('data-theme') || 'light';
-                    const icon = darkModeToggle.querySelector('i');
-                    const text = darkModeToggle.querySelector('span');
-                    
-                    if (theme === 'dark') {
-                        icon.className = 'bx bx-sun';
-                        if (text) text.textContent = 'Light Mode';
-                        darkModeToggle.style.background = 'rgba(255,255,255,0.2)';
-                    } else {
-                        icon.className = 'bx bx-moon';
-                        if (text) text.textContent = 'Dark Mode';
-                        darkModeToggle.style.background = 'rgba(255,255,255,0.1)';
-                    }
+                if (theme === 'dark') {
+                    icon.className = 'bx bx-sun';
+                    if (text) text.textContent = 'Light Mode';
+                    darkModeToggle.style.background = 'rgba(255,255,255,0.2)';
+                } else {
+                    icon.className = 'bx bx-moon';
+                    if (text) text.textContent = 'Dark Mode';
+                    darkModeToggle.style.background = 'rgba(255,255,255,0.1)';
                 }
             }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>

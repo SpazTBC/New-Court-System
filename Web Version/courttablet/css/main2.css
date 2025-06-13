@@ -1,0 +1,145 @@
+body {
+    background-color: rgb(252, 252, 252); 
+    background-image: url("../images/seal2.png");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+}
+#menu { /* menu */
+    background-color: rgb(226, 226, 226);
+    font-family: "Times New Roman", Times, serif;
+    color:rgb(64, 64, 64);
+}
+/* LINK DECORATION */
+#menu a input {
+    /* LINKS */
+    color: rgb(64, 64, 64);
+    font-size: 15px;
+    font-weight: bold;
+}
+#menu a input:visited {
+    color: rgb(64, 64, 64);
+    background-color: rgb(182, 179, 179);
+}
+#menu > a input:hover {
+    color: rgb(64,64,64);
+    background-color: rgb(182, 179, 179);
+}
+/* LINK DECORATION(ABOVE) */
+.menu { /* POSITIONING ONLY */
+/* NOTHING HERE */
+}
+#welcome {
+font-weight: bold;
+font-family: 'Brush Script MT', Brush Script Std, cursive;
+font-size: 15px;
+position: absolute;
+right: 9;
+top: 10;
+}
+.logo > img {
+    height: 50px;
+    width: 50px;
+}
+#message {
+    text-align: center;
+    font-size: 25px;
+    font-weight: bold;
+}
+.title {
+color:rgb(255, 255, 255);
+background-color:rgba(54, 54, 54, 0.425);
+text-align: center;
+}
+.title2 {
+    color:rgb(255, 255, 255);
+    background-color:rgb(0, 0, 0);
+    text-align: center;
+    }
+.title3 {
+    color:rgb(255, 255, 255);
+    background-color:rgb(0, 0, 0, 0.425);
+    text-align: center;
+    table-layout: auto;
+    width: 980px;
+}
+.logout {
+    position: absolute;
+    right: 0;
+}
+#courtboard table td {
+    /* Table Data Decoration */
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    border: 1px solid black;
+    border-width: auto;
+    text-align: center;
+}
+#courtboard table { 
+    /* Table Decoration */
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    border: 1px solid black;
+    border-width: auto;
+    text-align: center;
+}
+.container {
+    color:rgb(255, 255, 255);
+    background-color:rgba(54, 54, 54, 0.425);
+}
+.table-striped tr td {
+    color:rgba(0, 0, 0);
+    font-weight: bold;
+}
+.table-striped > .supervisor {
+    color: red;
+}
+.banned {
+    font-weight: bold;
+    color: red;
+    font-size: 200px;
+    text-align: center;
+}
+.bannedmessage {
+    font-weight: bold;
+    color: red;
+    font-size: 50px;
+    text-align: center;
+}
+#footer{
+    position:fixed;
+    left:0px;
+    bottom:0px;
+    height:30px;
+    width:100%;
+    background:#999;
+    color: rgb(0, 0, 0);
+    text-align: center;
+    font-weight: bold;
+}
+/* DEMO */
+.blink {
+    display: table; /* keep the background color wrapped tight */
+    margin: 0px auto 0px auto; /* keep the table centered */
+    padding:5px;
+  animation: blink 1.3s steps(1, end) infinite;
+  font-size: 25px;
+  color: white;
+  background-color: red;
+  text-align: center;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* DEMO */

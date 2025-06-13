@@ -72,6 +72,13 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .datetime-input input[type="datetime-local"] {
             min-width: 100%;
         }
+        .parties-section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0.375rem;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -149,10 +156,26 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="defendent" name="defendent" placeholder="Enter defendant name" required>
-                                        <label for="defendent"><i class='bx bx-user-x'></i> Name of Defendant</label>
+                                <!-- Parties Section -->
+                                <div class="col-12 mb-3 mt-4">
+                                    <div class="parties-section">
+                                        <h5 class="text-muted mb-3"><i class='bx bx-group'></i> Case Parties</h5>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="plaintiff" name="plaintiff" placeholder="Enter plaintiff name">
+                                                    <label for="plaintiff"><i class='bx bx-user-check'></i> Name of Plaintiff</label>
+                                                    <div class="form-text">The person or entity bringing the case (if applicable)</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="defendent" name="defendent" placeholder="Enter defendant name" required>
+                                                    <label for="defendent"><i class='bx bx-user-x'></i> Name of Defendant</label>
+                                                    <div class="form-text">The person or entity being accused/sued</div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

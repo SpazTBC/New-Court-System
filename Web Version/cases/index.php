@@ -83,7 +83,7 @@ $characterName = $user['charactername'];
                         <thead>
                             <tr>
                                 <th>Case ID</th>
-                                <th>Case Number</th>
+                                <th>Parties</th>
                                 <th>Supervisor</th>
                                 <th>Date Assigned</th>
                                 <th>Type</th>
@@ -154,7 +154,18 @@ $characterName = $user['charactername'];
                             ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($case['caseid']); ?></td>
-                                <td><?php echo htmlspecialchars($case['type']); ?></td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <?php if (!empty($case['plaintiff'])): ?>
+                                            <small class="text-success">
+                                                <i class='bx bx-user-check'></i> <strong>Plaintiff:</strong> <?php echo htmlspecialchars($case['plaintiff']); ?>
+                                            </small>
+                                        <?php endif; ?>
+                                        <small class="text-danger">
+                                            <i class='bx bx-user-x'></i> <strong>Defendant:</strong> <?php echo htmlspecialchars($case['defendent']); ?>
+                                        </small>
+                                    </div>
+                                </td>
                                 <td>
                                     <?php if($case['supervisor']): ?>
                                         <span class="badge bg-success">
@@ -191,7 +202,7 @@ $characterName = $user['charactername'];
                             else:
                             ?>
                             <tr>
-                                <td colspan="7" class="text-center">
+                                <td colspan="8" class="text-center">
                                     <?php if ($isCivilian): ?>
                                         No active cases found where you are listed as a defendant.
                                     <?php else: ?>
@@ -219,6 +230,7 @@ $characterName = $user['charactername'];
                             <tr>
                                 <th>Case ID</th>
                                 <th>Case Number</th>
+                                <th>Parties</th>
                                 <th>Supervisor</th>
                                 <th>Date Assigned</th>
                                 <th>Date Closed</th>
@@ -232,6 +244,18 @@ $characterName = $user['charactername'];
                             <tr class="table-light">
                                 <td><?php echo htmlspecialchars($case['caseid']); ?></td>
                                 <td><?php echo htmlspecialchars($case['type']); ?></td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <?php if (!empty($case['plaintiff'])): ?>
+                                            <small class="text-success">
+                                                <i class='bx bx-user-check'></i> <strong>Plaintiff:</strong> <?php echo htmlspecialchars($case['plaintiff']); ?>
+                                            </small>
+                                        <?php endif; ?>
+                                        <small class="text-danger">
+                                            <i class='bx bx-user-x'></i> <strong>Defendant:</strong> <?php echo htmlspecialchars($case['defendent']); ?>
+                                        </small>
+                                    </div>
+                                </td>
                                 <td>
                                     <?php if($case['supervisor']): ?>
                                         <span class="badge bg-success">
@@ -286,6 +310,7 @@ $characterName = $user['charactername'];
                             <tr>
                                 <th>Case ID</th>
                                 <th>Case Number</th>
+                                <th>Parties</th>
                                 <th>Assigned To</th>
                                 <th>Date Assigned</th>
                                 <th>Type</th>
@@ -303,6 +328,18 @@ $characterName = $user['charactername'];
                                 <tr>
                                     <td><?php echo htmlspecialchars($case['id']); ?></td>
                                     <td><?php echo htmlspecialchars($case['caseid']); ?></td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <?php if (!empty($case['plaintiff'])): ?>
+                                                <small class="text-success">
+                                                    <i class='bx bx-user-check'></i> <strong>Plaintiff:</strong> <?php echo htmlspecialchars($case['plaintiff']); ?>
+                                                </small>
+                                            <?php endif; ?>
+                                            <small class="text-danger">
+                                                <i class='bx bx-user-x'></i> <strong>Defendant:</strong> <?php echo htmlspecialchars($case['defendent']); ?>
+                                            </small>
+                                        </div>
+                                    </td>
                                     <td><?php echo htmlspecialchars($case['assigneduser']); ?></td>
                                     <td><?php echo htmlspecialchars($case['assigned']); ?></td>
                                     <td><?php echo htmlspecialchars($case['type']); ?></td>
@@ -317,7 +354,7 @@ $characterName = $user['charactername'];
                             else:
                             ?>
                                 <tr>
-                                    <td colspan="6" class="text-center">
+                                    <td colspan="7" class="text-center">
                                         <div class="alert alert-info">
                                             No supervised cases found.
                                         </div>
@@ -350,6 +387,7 @@ $characterName = $user['charactername'];
                             <tr>
                                 <th>Case ID</th>
                                 <th>Case Number</th>
+                                <th>Parties</th>
                                 <th>Assigned To</th>
                                 <th>Date Assigned</th>
                                 <th>Type</th>
@@ -361,6 +399,18 @@ $characterName = $user['charactername'];
                                 <tr>
                                     <td><?php echo htmlspecialchars($case['id']); ?></td>
                                     <td><?php echo htmlspecialchars($case['caseid']); ?></td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <?php if (!empty($case['plaintiff'])): ?>
+                                                <small class="text-success">
+                                                    <i class='bx bx-user-check'></i> <strong>Plaintiff:</strong> <?php echo htmlspecialchars($case['plaintiff']); ?>
+                                                </small>
+                                            <?php endif; ?>
+                                            <small class="text-danger">
+                                                <i class='bx bx-user-x'></i> <strong>Defendant:</strong> <?php echo htmlspecialchars($case['defendent']); ?>
+                                            </small>
+                                        </div>
+                                    </td>
                                     <td><?php echo htmlspecialchars($case['assigneduser']); ?></td>
                                     <td><?php echo htmlspecialchars($case['assigned']); ?></td>
                                     <td><?php echo htmlspecialchars($case['type']); ?></td>

@@ -21,6 +21,13 @@ include("../include/database.php");
             font-size: 0.875rem;
             color: #6c757d;
         }
+        .parties-section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.375rem;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -164,10 +171,26 @@ include("../include/database.php");
                                 <th>Date Assigned:</th>
                                 <td><?php echo htmlspecialchars($case['assigned']); ?></td>
                             </tr>
-                            <tr>
-                                <th>Defendant:</th>
-                                <td><?php echo htmlspecialchars($case['defendent']); ?></td>
-                            </tr>
+                        </table>
+                        
+                        <!-- Case Parties Section -->
+                        <div class="parties-section">
+                            <h6 class="fw-bold mb-3"><i class='bx bx-group'></i> Case Parties</h6>
+                            <div class="row">
+                                <?php if (!empty($case['plaintiff'])): ?>
+                                <div class="col-12 mb-2">
+                                    <strong><i class='bx bx-user-check text-success'></i> Plaintiff:</strong>
+                                    <span class="ms-2"><?php echo htmlspecialchars($case['plaintiff']); ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <div class="col-12 mb-2">
+                                    <strong><i class='bx bx-user-x text-danger'></i> Defendant:</strong>
+                                    <span class="ms-2"><?php echo htmlspecialchars($case['defendent']); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <table class="table table-striped">
                             <tr>
                                 <th>Details:</th>
                                 <td><?php echo nl2br(htmlspecialchars($case['details'])); ?></td>
@@ -187,7 +210,7 @@ include("../include/database.php");
                                              <input type="file" class="form-control" name="file" id="file" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.pdf,.doc,.docx,.txt,.rtf,.odt,.xls,.xlsx,.ppt,.pptx,.wmv,.mp4,.avi,.mov,.mkv,.flv,.webm,.m4v,.3gp,.mp3,.wav,.flac,.aac,.ogg,.wma,.zip,.rar,.7z,.tar,.gz">
                                              <div class="form-text file-size-info">
                                                  <strong>Maximum file size: 200MB</strong><br>
-                                                 Supported formats: Images (JPG, PNG, GIF, etc.), Documents (PDF, DOC, XLS, etc.), 
+                                                 Supported formats: Images (JPG, PNG, GIF, etc.), Documents (PDF, DOC, XLS, etc.),
                                                  Videos (MP4, AVI, MOV, etc.), Audio (MP3, WAV, etc.), Archives (ZIP, RAR, etc.)
                                              </div>
                                         </div>
@@ -409,7 +432,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
 
 </body>
 </html>

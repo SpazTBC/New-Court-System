@@ -16,6 +16,7 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Set a flag for attorney status - only true if job is Attorney AND job is approved
 $isAttorney = ($user['job'] === "Attorney" && $user['job_approved'] == 1);
+$isCivilian = ($user['job'] === "Civilian");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -81,6 +82,109 @@ $isAttorney = ($user['job'] === "Attorney" && $user['job_approved'] == 1);
                     </div>
                 </div>
             </div>
+
+            <!-- Civilian Cases Section - Only show for civilians -->
+            <?php if ($isCivilian): ?>
+            <div class="col-12 mt-4">
+                <div class="card shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h3 class="mb-0"><i class='bx bx-folder'></i> My Cases</h3>
+                        <small class="text-muted">Open cases where you are involved as a plaintiff or defendant</small>
+                    </div>
+                    <div class="card-body">
+                        <?php
+                        // Get cases where the civilian is either the defendant or plaintiff (by character name)
+                        // Only show cases with "Open" status
+                        $characterName = $user['charactername'];
+                        
+                        // Check if plaintiff column exists
+                        $checkColumn = $conn->query("SHOW COLUMNS FROM cases LIKE 'plaintiff'");
+                        $plaintiffColumnExists = $checkColumn->rowCount() > 0;
+                        
+                        if ($plaintiffColumnExists) {
+                            // Query with plaintiff column - only Open cases
+                            $stmt = $conn->prepare("SELECT caseid, type, status, 
+                                CASE 
+                                    WHEN defendent = ? THEN 'Defendant'
+                                    WHEN plaintiff = ? THEN 'Plaintiff'
+                                    ELSE 'Unknown'
+                                END as role
+                                FROM cases 
+                                WHERE (defendent = ? OR plaintiff = ?) 
+                                AND (status = 'approved' OR status IS NULL OR status = '')
+                                ORDER BY id DESC");
+                            $stmt->execute([$characterName, $characterName, $characterName, $characterName]);
+                        } else {
+                            // Query without plaintiff column (fallback) - only Open cases
+                            $stmt = $conn->prepare("SELECT caseid, type, status, 'Defendant' as role
+                                FROM cases 
+                                WHERE defendent = ? 
+                                AND (status = 'approved' OR status IS NULL OR status = '')
+                                ORDER BY id DESC");
+                            $stmt->execute([$characterName]);
+                        }
+                        
+                        $civilian_cases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        if (!empty($civilian_cases)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th><i class='bx bx-hash'></i> Case ID</th>
+                                            <th><i class='bx bx-category'></i> Type</th>
+                                            <th><i class='bx bx-user'></i> Your Role</th>
+                                            <th><i class='bx bx-flag'></i> Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach($civilian_cases as $case): ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?php echo htmlspecialchars($case['caseid']); ?></strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">
+                                                    <?php echo htmlspecialchars($case['type']); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <?php 
+                                                $roleClass = $case['role'] === 'Plaintiff' ? 'bg-success' : 'bg-danger';
+                                                $roleIcon = $case['role'] === 'Plaintiff' ? 'bx-user-check' : 'bx-user-x';
+                                                ?>
+                                                <span class="badge <?php echo $roleClass; ?>">
+                                                    <i class='bx <?php echo $roleIcon; ?>'></i> <?php echo htmlspecialchars($case['role']); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <?php 
+                                                $status = $case['status'] ?? 'Open';
+                                                if($status == 'approved') {
+                                                    $status = 'Open';
+                                                }
+                                                // Since we're only showing Open cases, we can simplify this
+                                                ?>
+                                                <span class="badge bg-primary">
+                                                    <i class='bx bx-folder-open'></i> <?php echo htmlspecialchars(ucfirst($status ?: 'Open')); ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-info text-center">
+                                <i class='bx bx-info-circle'></i>
+                                <h5>No Open Cases Found</h5>
+                                <p class="mb-0">You are not currently involved in any open legal cases as a plaintiff or defendant.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- User Profile Section -->
             <div class="col-12 mt-4">

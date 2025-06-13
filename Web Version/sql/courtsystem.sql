@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 07, 2025 at 04:57 AM
+-- Generation Time: Jun 13, 2025 at 05:19 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -63,6 +63,7 @@ CREATE TABLE `cases` (
   `shared04` text NOT NULL,
   `type` text NOT NULL,
   `defendent` text NOT NULL,
+  `plaintiff` varchar(255) DEFAULT NULL,
   `status` varchar(20) DEFAULT 'approved',
   `hearing_date` datetime DEFAULT NULL,
   `courtroom` varchar(100) DEFAULT NULL,

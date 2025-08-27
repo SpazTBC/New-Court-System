@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 27, 2025 at 09:13 PM
+-- Generation Time: Aug 28, 2025 at 01:16 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,29 @@ SET time_zone = "+00:00";
 --
 -- Database: `courtsystem`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appointments`
+--
+
+CREATE TABLE `appointments` (
+  `id` int(11) NOT NULL,
+  `client_number` varchar(50) DEFAULT NULL,
+  `client_name` varchar(255) NOT NULL,
+  `client_phone` varchar(20) DEFAULT NULL,
+  `client_email` varchar(255) DEFAULT NULL,
+  `appointment_date` datetime NOT NULL,
+  `reason` text NOT NULL,
+  `appointment_type` enum('consultation','follow_up','document_review','court_prep','other') DEFAULT 'consultation',
+  `status` enum('scheduled','confirmed','completed','cancelled','no_show') DEFAULT 'scheduled',
+  `assigned_attorney` varchar(100) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_by` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -40,7 +63,14 @@ CREATE TABLE `cases` (
   `shared04` text NOT NULL,
   `type` text NOT NULL,
   `defendent` text NOT NULL,
-  `status` varchar(20) DEFAULT 'approved'
+  `plaintiff` varchar(255) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'approved',
+  `hearing_date` datetime DEFAULT NULL,
+  `courtroom` varchar(100) DEFAULT NULL,
+  `hearing_status` enum('scheduled','completed','cancelled','postponed') DEFAULT 'scheduled',
+  `hearing_notes` text DEFAULT NULL,
+  `closed_date` datetime DEFAULT NULL,
+  `closed_by` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -83,6 +113,22 @@ CREATE TABLE `evidence` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `message` text NOT NULL,
+  `type` enum('hearing','case','system') DEFAULT 'hearing',
+  `case_id` int(11) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -108,10 +154,23 @@ CREATE TABLE `users` (
 --
 
 --
+-- Indexes for table `appointments`
+--
+ALTER TABLE `appointments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_appointment_date` (`appointment_date`),
+  ADD KEY `idx_client_name` (`client_name`),
+  ADD KEY `idx_created_by` (`created_by`),
+  ADD KEY `idx_assigned_attorney` (`assigned_attorney`);
+
+--
 -- Indexes for table `cases`
 --
 ALTER TABLE `cases`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_hearing_date` (`hearing_date`),
+  ADD KEY `idx_hearing_status` (`hearing_status`),
+  ADD KEY `idx_courtroom` (`courtroom`);
 
 --
 -- Indexes for table `client_intake`
@@ -126,6 +185,13 @@ ALTER TABLE `evidence`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `case_id` (`case_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -134,6 +200,12 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `appointments`
+--
+ALTER TABLE `appointments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `cases`
@@ -154,10 +226,26 @@ ALTER TABLE `evidence`
   MODIFY `id` int(1) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `userid` int(1) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`case_id`) REFERENCES `cases` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

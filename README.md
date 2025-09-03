@@ -7,6 +7,8 @@ Discord: http://discord.gg/HW5atYDh6m
 Discord: shawnblackwood
 
 
+------------------------------------------
+**THIS DOESN'T WORK ON GAME PANELS, THIS MUST BE A VPS.**
 ---------------Installation---------------
 
 YOU WILL NEED:

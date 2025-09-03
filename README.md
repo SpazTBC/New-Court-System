@@ -9,6 +9,7 @@ Discord: shawnblackwood
 
 ------------------------------------------
 **THIS DOESN'T WORK ON GAME PANELS, THIS MUST BE A VPS.**
+
 ---------------Installation---------------
 
 YOU WILL NEED:
